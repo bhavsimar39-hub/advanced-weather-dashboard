@@ -1,0 +1,13 @@
+{
+  "name": "weather-dashboard",
+  "version": "1.0.0",
+  "scripts": {
+    "frontend": "live-server --port=5500",
+    "backend": "cd server && npm run dev",
+    "dev": "concurrently \"npm run backend\" \"npm run frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1",
+    "live-server": "^1.2.2"
+  }
+}

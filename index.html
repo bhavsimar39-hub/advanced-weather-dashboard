@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atmos — Weather Intelligence</title>
+
+  <!-- FONTS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <!-- ICONS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- CHART JS -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+
+  <canvas id="bg-canvas"></canvas>
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- LOADER -->
+  <div class="loader" id="loader">
+    <div class="loader-inner">
+      <div class="loader-orb"></div>
+      <div class="loader-ring"></div>
+      <div class="loader-ring r2"></div>
+      <p class="loader-text">Atmos</p>
+    </div>
+  </div>
+
+  <!-- AUTH MODAL -->
+  <div class="modal-overlay" id="auth-modal">
+    <div class="modal-box">
+      <button class="modal-close" id="close-auth-btn">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+      <div class="modal-left">
+        <div class="modal-brand">
+          <i class="fa-solid fa-cloud-sun-rain"></i>
+          <span>Atmos</span>
+        </div>
+        <div class="modal-tagline">
+          <h2>Your weather,<br/>personalised.</h2>
+          <p>Save cities, track your favourites and get a dashboard built around where you are.</p>
+        </div>
+        <div class="modal-features">
+          <div class="modal-feat"><i class="fa-solid fa-heart"></i> Save favourite cities</div>
+          <div class="modal-feat"><i class="fa-solid fa-clock-rotate-left"></i> Personal search history</div>
+          <div class="modal-feat"><i class="fa-solid fa-location-crosshairs"></i> Auto location detection</div>
+        </div>
+      </div>
+
+      <div class="modal-right">
+        <div class="modal-context" id="modal-context" style="display:none">
+          <i class="fa-solid fa-location-dot"></i>
+          <span id="modal-context-text">Sign in to save this city</span>
+        </div>
+        <div class="modal-tabs">
+          <button class="tab-btn active" data-tab="login">Sign In</button>
+          <button class="tab-btn" data-tab="register">Register</button>
+        </div>
+        <div class="modal-form" id="login-form">
+          <div class="input-group">
+            <i class="fa-solid fa-envelope"></i>
+            <input type="email" id="email" placeholder="Email address" autocomplete="email" />
+          </div>
+          <div class="input-group">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" id="password" placeholder="Password" autocomplete="current-password" />
+          </div>
+          <button class="modal-submit" id="login-btn">
+            <span>Sign In</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+          <p class="modal-switch">No account? <a href="#" id="switch-to-register">Create one free</a></p>
+        </div>
+        <div class="modal-form hidden" id="register-form">
+          <div class="input-group">
+            <i class="fa-solid fa-user"></i>
+            <input type="text" id="username" placeholder="Your name" autocomplete="name" />
+          </div>
+          <div class="input-group">
+            <i class="fa-solid fa-envelope"></i>
+            <input type="email" id="reg-email" placeholder="Email address" autocomplete="email" />
+          </div>
+          <div class="input-group">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" id="reg-password" placeholder="Create password" autocomplete="new-password" />
+          </div>
+          <button class="modal-submit" id="register-btn">
+            <span>Create Account</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+          <p class="modal-switch">Already have an account? <a href="#" id="switch-to-login">Sign in</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP WRAPPER -->
+  <div class="app-wrapper">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <i class="fa-solid fa-cloud-sun-rain"></i>
+        <span>Atmos</span>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-section="main">
+          <i class="fa-solid fa-house-chimney"></i><span>Overview</span>
+        </a>
+        <a href="#" class="nav-item" data-section="forecast">
+          <i class="fa-solid fa-calendar-days"></i><span>Forecast</span>
+        </a>
+        <a href="#" class="nav-item" data-section="analytics">
+          <i class="fa-solid fa-chart-line"></i><span>Analytics</span>
+        </a>
+        <a href="#" class="nav-item" data-section="favorites">
+          <i class="fa-solid fa-heart"></i><span>Favorites</span>
+        </a>
+      </nav>
+      <div class="sidebar-bottom">
+        <button class="unit-toggle" id="unit-toggle"><span id="unit-label">°C</span></button>
+        <button class="theme-btn"   id="theme-btn"><i class="fa-solid fa-circle-half-stroke"></i></button>
+        <button class="auth-open-btn" id="open-auth-btn" title="Sign in">
+          <i class="fa-regular fa-user"></i>
+        </button>
+        <div class="user-chip" id="user-chip" style="display:none">
+          <div class="user-avatar" id="user-avatar">A</div>
+          <button class="logout-btn" id="logout-btn" title="Sign out">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+      <!-- TOP BAR -->
+      <div class="topbar">
+        <div class="search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="search-input" placeholder="Search any city..." />
+          <button id="location-btn" class="location-btn" title="Use my location">
+            <i class="fa-solid fa-location-crosshairs"></i>
+          </button>
+          <button id="search-btn">Search</button>
+        </div>
+        <div class="topbar-right">
+          <div class="live-clock" id="live-clock">--:--</div>
+          <div class="live-date"  id="live-date">---</div>
+        </div>
+        <!-- Mobile-only quick actions row -->
+        <div class="mobile-topbar-actions">
+          <button class="unit-toggle" id="unit-toggle-mob" onclick="document.getElementById('unit-toggle').click()">
+            <span id="unit-label-mob">°C</span>
+          </button>
+          <button class="theme-btn" onclick="document.getElementById('theme-btn').click()">
+            <i class="fa-solid fa-circle-half-stroke"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- HERO -->
+      <section class="hero-section">
+        <div class="hero-left">
+          <div class="hero-location">
+            <i class="fa-solid fa-location-dot"></i>
+            <h2 id="city-name">Delhi, India</h2>
+          </div>
+          <div class="hero-temp">
+            <span id="temperature">34</span>
+            <sup class="temp-unit">°C</sup>
+          </div>
+          <div class="hero-condition">
+            <span id="weather-condition">Sunny</span>
+          </div>
+          <div class="hero-minmax">
+            <span>H: <b id="temp-max">--</b></span>
+            <span>L: <b id="temp-min">--</b></span>
+          </div>
+          <button class="fav-btn" id="favorite-btn">
+            <i class="fa-regular fa-heart"></i>
+            <span>Save City</span>
+          </button>
+        </div>
+        <div class="hero-right">
+          <div class="weather-anim-wrap" id="weather-anim-wrap">
+            <img id="weather-icon" src="" alt="weather" class="weather-icon-main" />
+          </div>
+        </div>
+      </section>
+
+      <!-- STATS GRID -->
+      <section class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fa-solid fa-droplet"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Humidity</span>
+            <span class="stat-value" id="humidity">60%</span>
+          </div>
+          <div class="stat-bar"><div class="stat-bar-fill" id="humidity-bar" style="width:60%"></div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fa-solid fa-wind"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Wind Speed</span>
+            <span class="stat-value" id="wind-speed">10 km/h</span>
+          </div>
+          <div class="stat-compass" id="wind-compass">
+            <div class="compass-needle" id="wind-needle"></div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fa-solid fa-temperature-half"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Feels Like</span>
+            <span class="stat-value" id="feels-like">32°C</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fa-solid fa-gauge-high"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Pressure</span>
+            <span class="stat-value" id="pressure">1013 hPa</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fa-solid fa-smog"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Air Quality</span>
+            <span class="stat-value" id="aqi">--</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fa-solid fa-eye"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Visibility</span>
+            <span class="stat-value" id="visibility">-- km</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- FORECAST + SUN ROW -->
+      <div class="twin-row">
+        <section class="panel forecast-panel">
+          <div class="panel-header">
+            <h3><i class="fa-solid fa-calendar-days"></i> 7-Day Forecast</h3>
+          </div>
+          <div class="forecast-container" id="forecast-container"></div>
+        </section>
+
+        <section class="panel sun-panel">
+          <div class="panel-header">
+            <h3><i class="fa-solid fa-sun"></i> Sun & UV</h3>
+          </div>
+          <div class="sun-arc-wrap">
+            <svg class="sun-arc-svg" viewBox="0 0 220 120">
+              <defs>
+                <linearGradient id="arcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%"   style="stop-color:#f59e0b" />
+                  <stop offset="100%" style="stop-color:#f97316" />
+                </linearGradient>
+              </defs>
+              <path class="arc-bg"   d="M 20,110 A 90,90 0 0,1 200,110" />
+              <path class="arc-fill" id="arc-fill" d="M 20,110 A 90,90 0 0,1 200,110" />
+              <circle class="arc-sun" id="arc-sun" cx="110" cy="20" r="10" />
+            </svg>
+            <div class="sun-times">
+              <div class="sun-time-item">
+                <i class="fa-solid fa-sunrise"></i>
+                <span>Sunrise</span>
+                <b id="sunrise">--</b>
+              </div>
+              <div class="sun-time-item">
+                <i class="fa-solid fa-sunset"></i>
+                <span>Sunset</span>
+                <b id="sunset">--</b>
+              </div>
+            </div>
+          </div>
+          <div class="uv-row">
+            <span class="uv-label">UV Index</span>
+            <div class="uv-bar-wrap">
+              <div class="uv-bar"><div class="uv-bar-fill" id="uv-bar-fill"></div></div>
+              <span id="uv-index">--</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- HOURLY FORECAST -->
+      <section class="panel hourly-panel">
+        <div class="panel-header">
+          <h3><i class="fa-solid fa-clock"></i> Hourly Forecast</h3>
+        </div>
+        <div class="hourly-container" id="hourly-container"></div>
+      </section>
+
+      <!-- CHART -->
+      <section class="panel chart-panel">
+        <div class="panel-header">
+          <h3><i class="fa-solid fa-chart-line"></i> Temperature Trend</h3>
+          <div class="chart-toggles">
+            <button class="chart-toggle active" data-type="temp">Temp</button>
+            <button class="chart-toggle" data-type="rain">Rain</button>
+            <button class="chart-toggle" data-type="humidity">Humidity</button>
+          </div>
+        </div>
+        <canvas id="weatherChart"></canvas>
+      </section>
+
+      <!-- LIFESTYLE TIPS -->
+      <section class="panel lifestyle-panel">
+        <div class="panel-header">
+          <h3><i class="fa-solid fa-heart-pulse"></i> Lifestyle Tips</h3>
+          <span class="lifestyle-location" id="lifestyle-location"></span>
+        </div>
+        <div class="lifestyle-grid" id="lifestyle-grid">
+          <div class="lifestyle-empty">
+            <i class="fa-solid fa-cloud-sun"></i>
+            <p>Search a city to see personalised tips</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAVORITES + RECENT -->
+      <div class="twin-row">
+        <section class="panel fav-panel">
+          <div class="panel-header">
+            <h3><i class="fa-solid fa-heart"></i> Favorites</h3>
+          </div>
+          <div class="favorites-container" id="favorites-container">
+            <p class="empty-state">Sign in to view favorites</p>
+          </div>
+        </section>
+
+        <section class="panel recent-panel">
+          <div class="panel-header">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> Recent Searches</h3>
+          </div>
+          <div class="recent-container" id="recent-container"></div>
+        </section>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="mobile-nav" id="mobile-nav">
+    <button class="mobile-nav-item active" data-section="main">
+      <i class="fa-solid fa-house-chimney"></i>
+      <span>Home</span>
+    </button>
+    <button class="mobile-nav-item" data-section="forecast">
+      <i class="fa-solid fa-calendar-days"></i>
+      <span>Forecast</span>
+    </button>
+    <button class="mobile-nav-item" data-section="analytics">
+      <i class="fa-solid fa-chart-line"></i>
+      <span>Analytics</span>
+    </button>
+    <button class="mobile-nav-item" data-section="favorites">
+      <i class="fa-solid fa-heart"></i>
+      <span>Favorites</span>
+    </button>
+    <button class="mobile-nav-item" id="mobile-auth-btn">
+      <i class="fa-regular fa-user"></i>
+      <span>Account</span>
+    </button>
+  </nav>
+
+  <script type="module" src="./js/app.js"></script>
+  <script>
+    // Mobile nav — mirrors desktop sidebar behaviour
+    const sectionMap = {
+      main:      ".hero-section",
+      forecast:  ".forecast-panel",
+      analytics: ".chart-panel",
+      favorites: ".fav-panel",
+    };
+    document.querySelectorAll(".mobile-nav-item[data-section]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".mobile-nav-item").forEach(b => b.classList.remove("active"));
+        // Also sync desktop nav
+        document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const match = document.querySelector(`.nav-item[data-section="${btn.dataset.section}"]`);
+        if (match) match.classList.add("active");
+        const el = document.querySelector(sectionMap[btn.dataset.section]);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+    // Mobile account button opens auth modal
+    const mobileAuthBtn = document.getElementById("mobile-auth-btn");
+    if (mobileAuthBtn) {
+      mobileAuthBtn.addEventListener("click", () => {
+        const btn = document.getElementById("open-auth-btn");
+        const chip = document.getElementById("user-chip");
+        if (btn && btn.style.display !== "none") btn.click();
+        else if (chip && chip.style.display !== "none") {
+          // Already logged in — scroll to favorites
+          const el = document.querySelector(".fav-panel");
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }
+      });
+    }
+  </script>
+</body>
+</html>
