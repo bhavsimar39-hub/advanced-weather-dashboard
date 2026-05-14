@@ -2,9 +2,9 @@
    ATMOS — API LAYER
    ============================================================ */
 
-const WEATHER_URL   = "/api/weather";
-const AUTH_URL      = "/api/auth";
-const FAVORITES_URL = "/api/favorites";
+const WEATHER_URL   = "https://atmos-backend.onrender.com/api/weather";
+const AUTH_URL      = "https://atmos-backend.onrender.com/api/auth";
+const FAVORITES_URL = "https://atmos-backend.onrender.com/api/favorites";
 
 function token() { return localStorage.getItem("token"); }
 
