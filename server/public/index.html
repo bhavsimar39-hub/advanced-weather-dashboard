@@ -145,6 +145,9 @@
     <!-- MAIN CONTENT -->
     <main class="main-content">
 
+      <!-- WEATHER ALERTS -->
+      <div id="alerts-banner" style="display:none"></div>
+
       <!-- TOP BAR -->
       <div class="topbar">
         <div class="search-wrap">
@@ -184,6 +187,7 @@
           <div class="hero-condition">
             <span id="weather-condition">Sunny</span>
           </div>
+          <div class="hero-precip-summary" id="precip-summary"></div>
           <div class="hero-minmax">
             <span>H: <b id="temp-max">--</b></span>
             <span>L: <b id="temp-min">--</b></span>
@@ -248,6 +252,20 @@
             <span class="stat-value" id="visibility">-- km</span>
           </div>
         </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fa-solid fa-temperature-low"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Dew Point</span>
+            <span class="stat-value" id="dew-point">--</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="fa-solid fa-cloud"></i></div>
+          <div class="stat-info">
+            <span class="stat-label">Cloud Cover</span>
+            <span class="stat-value" id="cloud-cover">--%</span>
+          </div>
+        </div>
       </section>
 
       <!-- FORECAST + SUN ROW -->
@@ -294,6 +312,10 @@
               <div class="uv-bar"><div class="uv-bar-fill" id="uv-bar-fill"></div></div>
               <span id="uv-index">--</span>
             </div>
+          </div>
+          <div class="moon-row">
+            <span class="uv-label">Moon Phase</span>
+            <span id="moon-phase" class="moon-phase-val">--</span>
           </div>
         </section>
       </div>

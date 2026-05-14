@@ -1180,3 +1180,162 @@ body[data-weather="clear"] .hero-section {
   .lifestyle-card-title { font-size: 0.78rem; }
   .lifestyle-tips-list li { font-size: 0.75rem; }
 }
+
+/* ============================================================
+   ACCURACY ADDITIONS
+   ============================================================ */
+
+/* ── Precipitation summary line (Apple Weather style) ── */
+.hero-precip-summary {
+  font-size: 0.82rem;
+  color: rgba(180,210,255,0.85);
+  margin: 4px 0 10px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.2px;
+}
+
+/* ── Weather alerts banner ── */
+#alerts-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.alert-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: rgba(239,68,68,0.15);
+  border: 1px solid rgba(239,68,68,0.35);
+  border-radius: var(--radius-lg);
+  padding: 12px 16px;
+  color: #fca5a5;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+.alert-item i {
+  color: #f87171;
+  font-size: 1.1rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.alert-item strong {
+  display: block;
+  font-weight: 700;
+  color: #fecaca;
+  margin-bottom: 2px;
+}
+
+/* ── Forecast row with temp bar ── */
+.forecast-card {
+  display: grid;
+  grid-template-columns: 48px 60px 32px 44px 1fr 44px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: background 0.15s;
+}
+.forecast-card:last-child { border-bottom: none; }
+.forecast-card:hover { background: rgba(255,255,255,0.04); }
+
+.forecast-day { font-size: 0.88rem; color: var(--text-1); font-weight: 600; }
+.forecast-precip { font-size: 0.7rem; color: var(--accent); min-width: 50px; }
+.fc-rain, .fc-snow { display: block; }
+.forecast-card img { width: 28px; height: 28px; }
+.forecast-temp-low  { font-size: 0.85rem; color: var(--text-2); text-align: right; min-width: 36px; }
+.forecast-temp-high { font-size: 0.85rem; color: var(--text-1); font-weight: 600; min-width: 36px; }
+
+.forecast-temp-bar-wrap { flex: 1; }
+.forecast-temp-bar {
+  height: 4px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 99px;
+  position: relative;
+  width: 100%;
+}
+.forecast-temp-bar-fill {
+  position: absolute;
+  top: 0; height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #fbbf24);
+  border-radius: 99px;
+  min-width: 8px;
+}
+
+/* ── Hourly card with rain bar ── */
+.hour-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-width: 64px;
+  padding: 12px 8px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+.hour-card.now {
+  background: rgba(56,189,248,0.12);
+  border-color: rgba(56,189,248,0.3);
+}
+.hour-time  { font-size: 0.72rem; color: var(--text-2); }
+.hour-temp  { font-size: 0.95rem; font-weight: 600; color: var(--text-1); }
+.hour-wind  { font-size: 0.68rem; color: var(--text-3); }
+.hour-wind small { font-size: 0.6rem; }
+
+.hour-rain-bar-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  height: 32px;
+  justify-content: flex-end;
+}
+.hour-rain-bar {
+  width: 6px;
+  height: 24px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 99px;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+}
+.hour-rain-bar-fill {
+  width: 100%;
+  background: linear-gradient(to top, #38bdf8, #818cf8);
+  border-radius: 99px;
+  min-height: 2px;
+}
+.hour-rain-pct { font-size: 0.6rem; color: var(--accent); }
+
+/* ── Moon phase row ── */
+.moon-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.moon-phase-val {
+  font-size: 0.82rem;
+  color: var(--text-1);
+  font-family: var(--font-mono);
+}
+
+/* ── Stats grid 8 columns on large screens ── */
+@media (min-width: 1101px) {
+  .stats-grid { grid-template-columns: repeat(8, 1fr); }
+}
+@media (max-width: 1100px) {
+  .stats-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 768px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .forecast-card {
+    grid-template-columns: 40px 48px 28px 36px 1fr 36px;
+    gap: 6px; padding: 8px 10px;
+  }
+}

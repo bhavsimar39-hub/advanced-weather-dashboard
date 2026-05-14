@@ -625,51 +625,123 @@ export function updateBackground(condition, isDay = true) {
    MAIN UI UPDATE
    ============================================================ */
 export function updateUI(data) {
-  const { location, current, forecast } = data;
+  const { location, current, forecast, alerts } = data;
 
-  $("city-name").textContent        = `${location.name}, ${location.country}`;
-  $("temperature").textContent      = Math.round(current.temp_c);
+  // ── Location & temp ──────────────────────────────────────
+  $("city-name").textContent         = `${location.name}, ${location.country}`;
+  $("temperature").textContent       = Math.round(useFahrenheit ? current.temp_f : current.temp_c);
   $("weather-condition").textContent = current.condition.text;
-
-  // Weather icon hidden — background gradient shows the weather mood
 
   const today = forecast.forecastday[0].day;
   $("temp-max").textContent = temp(today.maxtemp_c);
   $("temp-min").textContent = temp(today.mintemp_c);
 
+  // ── Stats grid ───────────────────────────────────────────
   $("humidity").textContent     = `${current.humidity}%`;
   $("humidity-bar").style.width = `${current.humidity}%`;
-  $("wind-speed").textContent   = `${current.wind_kph} km/h`;
-  $("feels-like").textContent   = temp(current.feelslike_c);
-  $("pressure").textContent     = `${current.pressure_mb} hPa`;
-  $("visibility").textContent   = `${current.vis_km} km`;
 
+  // Wind: speed + direction text + gust
+  const windDir = current.wind_dir || "";
+  const gustKph = current.gust_kph ? ` · Gust ${Math.round(current.gust_kph)} km/h` : "";
+  $("wind-speed").textContent = `${current.wind_kph} km/h ${windDir}${gustKph}`;
   const needle = $("wind-needle");
   if (needle) needle.style.transform = `translate(-50%, -100%) rotate(${current.wind_degree}deg)`;
 
+  $("feels-like").textContent  = temp(current.feelslike_c);
+  $("pressure").textContent    = `${current.pressure_mb} hPa`;
+  $("visibility").textContent  = `${current.vis_km} km`;
+
+  // ── AQI with descriptive label ───────────────────────────
   if (current.air_quality) {
-    const pm25   = current.air_quality.pm2_5;
-    const aqiEl  = $("aqi");
-    aqiEl.textContent = pm25.toFixed(1);
+    const pm25  = current.air_quality.pm2_5;
+    const usaqi = current.air_quality["us-epa-index"];
+    const aqiEl = $("aqi");
+    const labels = ["Good","Moderate","Unhealthy (Sensitive)","Unhealthy","Very Unhealthy","Hazardous"];
+    aqiEl.textContent = `${pm25.toFixed(1)} · ${labels[(usaqi || 1) - 1] || ""}`;
     aqiEl.style.color = pm25 < 12 ? "var(--success)" : pm25 < 35 ? "var(--accent-warm)" : "var(--danger)";
   } else {
     $("aqi").textContent = "--";
   }
 
-  const uv     = today.uv;
-  $("uv-index").textContent = uv ?? "--";
+  // ── UV with label ────────────────────────────────────────
+  const uv = today.uv;
+  const uvLabels = ["Low","Low","Low","Moderate","Moderate","Moderate","High","High","Very High","Very High","Very High","Extreme"];
+  const uvLabel  = uvLabels[Math.min(Math.round(uv), 11)] || "";
+  $("uv-index").textContent = uv != null ? `${uv} · ${uvLabel}` : "--";
   const uvFill = $("uv-bar-fill");
   if (uvFill && uv != null) uvFill.style.width = `${Math.min((uv / 11) * 100, 100)}%`;
 
+  // ── Sun arc + moon phase ─────────────────────────────────
   const astro = forecast.forecastday[0].astro;
   $("sunrise").textContent = astro.sunrise;
   $("sunset").textContent  = astro.sunset;
   updateSunArc(astro.sunrise, astro.sunset);
 
+  // Moon phase display
+  const moonEl = $("moon-phase");
+  if (moonEl) {
+    const moonIcons = {
+      "New Moon":"🌑","Waxing Crescent":"🌒","First Quarter":"🌓","Waxing Gibbous":"🌔",
+      "Full Moon":"🌕","Waning Gibbous":"🌖","Last Quarter":"🌗","Waning Crescent":"🌘",
+    };
+    moonEl.textContent = `${moonIcons[astro.moon_phase] || "🌙"} ${astro.moon_phase}`;
+  }
+
+  // ── Dew point & cloud cover (extra stat cards) ────────────
+  const dewEl   = $("dew-point");
+  const cloudEl = $("cloud-cover");
+  if (dewEl)   dewEl.textContent   = temp(current.dewpoint_c ?? (current.dew_point_c));
+  if (cloudEl) cloudEl.textContent = `${current.cloud}%`;
+
+  // ── Precipitation summary (Apple Weather style) ───────────
+  const precipEl = $("precip-summary");
+  if (precipEl) {
+    const rainMm   = today.totalprecip_mm;
+    const rainChance = today.daily_chance_of_rain;
+    if (rainMm > 0) {
+      precipEl.textContent = `${rainMm} mm expected · ${rainChance}% chance of rain`;
+    } else if (rainChance > 20) {
+      precipEl.textContent = `${rainChance}% chance of rain`;
+    } else {
+      precipEl.textContent = "No precipitation expected";
+    }
+  }
+
+  // ── Weather alerts banner ─────────────────────────────────
+  renderAlerts(alerts?.alert || []);
+
   renderForecast(forecast.forecastday);
   renderHourly(forecast.forecastday[0].hour);
   renderLifestyleTips(data);
   updateBackground(current.condition.text, current.is_day === 1);
+}
+
+/* ============================================================
+   ALERTS BANNER
+   ============================================================ */
+function renderAlerts(alerts) {
+  let banner = $("alerts-banner");
+  if (!alerts.length) {
+    if (banner) banner.style.display = "none";
+    return;
+  }
+  if (!banner) {
+    banner = document.createElement("div");
+    banner.id = "alerts-banner";
+    const main = document.querySelector(".main-content");
+    const topbar = document.querySelector(".topbar");
+    if (main && topbar) main.insertBefore(banner, topbar.nextSibling);
+  }
+  banner.style.display = "flex";
+  banner.innerHTML = alerts.slice(0, 2).map(a => `
+    <div class="alert-item">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <div>
+        <strong>${a.event}</strong>
+        <span>${a.desc?.slice(0, 120) || ""}${(a.desc?.length > 120) ? "…" : ""}</span>
+      </div>
+    </div>
+  `).join("");
 }
 
 /* ============================================================
@@ -709,18 +781,39 @@ function updateSunArc(riseStr, setStr) {
 function renderForecast(days) {
   const container = $("forecast-container");
   container.innerHTML = "";
+  // Find global min/max for temp bar scaling
+  const allMax = Math.max(...days.map(d => d.day.maxtemp_c));
+  const allMin = Math.min(...days.map(d => d.day.mintemp_c));
+  const range  = allMax - allMin || 1;
+
   days.forEach((day) => {
     const card    = document.createElement("div");
     card.className = "forecast-card";
-    const dayName = new Date(day.date).toLocaleDateString("en-US", { weekday: "short" });
+    const date    = new Date(day.date + "T12:00:00");
+    const dayName = date.toLocaleDateString("en-US", { weekday: "short" });
+    const isToday = date.toDateString() === new Date().toDateString();
+    const rain    = day.day.daily_chance_of_rain;
+    const snow    = day.day.daily_chance_of_snow;
+
+    // Temperature bar position within week's range
+    const lo = day.day.mintemp_c, hi = day.day.maxtemp_c;
+    const barLeft  = ((lo - allMin) / range * 80).toFixed(1);
+    const barWidth = ((hi - lo) / range * 80).toFixed(1);
+
     card.innerHTML = `
-      <span class="forecast-day">${dayName}</span>
-      <img src="https:${day.day.condition.icon}" alt="forecast" />
-      <span class="forecast-condition">${day.day.condition.text}</span>
-      <div class="forecast-temp-range">
-        <span class="forecast-temp-high">${temp(day.day.maxtemp_c)}</span>
-        <span class="forecast-temp-low">${temp(day.day.mintemp_c)}</span>
+      <span class="forecast-day">${isToday ? "Today" : dayName}</span>
+      <div class="forecast-precip">
+        ${rain > 10 ? `<span class="fc-rain">💧${rain}%</span>` : ""}
+        ${snow > 10 ? `<span class="fc-snow">❄️${snow}%</span>` : ""}
       </div>
+      <img src="https:${day.day.condition.icon}" alt="${day.day.condition.text}" />
+      <span class="forecast-temp-low">${temp(lo)}</span>
+      <div class="forecast-temp-bar-wrap">
+        <div class="forecast-temp-bar">
+          <div class="forecast-temp-bar-fill" style="left:${barLeft}%;width:${barWidth}%"></div>
+        </div>
+      </div>
+      <span class="forecast-temp-high">${temp(hi)}</span>
     `;
     container.appendChild(card);
   });
@@ -733,16 +826,32 @@ function renderHourly(hours) {
   const container = $("hourly-container");
   container.innerHTML = "";
   const nowH = new Date().getHours();
-  hours.forEach((hour) => {
+  // Show from current hour onwards, then wrap
+  const sorted = [...hours.slice(nowH), ...hours.slice(0, nowH)];
+
+  sorted.forEach((hour) => {
     const h    = parseInt(hour.time.split(" ")[1]);
     const card = document.createElement("div");
     card.className = "hour-card" + (h === nowH ? " now" : "");
-    const label = h === nowH ? "Now" : hour.time.split(" ")[1];
+
+    // Format time as 12h
+    const timeStr = h === nowH ? "Now" :
+      new Date(`2000-01-01T${String(h).padStart(2,"0")}:00`).toLocaleTimeString("en-US", { hour: "numeric", hour12: true });
+
+    const rainPct = hour.chance_of_rain;
+    const showRain = rainPct > 0;
+
     card.innerHTML = `
-      <span class="hour-time">${label}</span>
-      <img src="https:${hour.condition.icon}" alt="hour" />
+      <span class="hour-time">${timeStr}</span>
+      <img src="https:${hour.condition.icon}" alt="${hour.condition.text}" />
       <span class="hour-temp">${temp(hour.temp_c)}</span>
-      <span class="hour-rain">💧 ${hour.chance_of_rain}%</span>
+      <div class="hour-rain-bar-wrap" title="${rainPct}% rain">
+        <div class="hour-rain-bar">
+          <div class="hour-rain-bar-fill" style="height:${rainPct}%"></div>
+        </div>
+        ${showRain ? `<span class="hour-rain-pct">${rainPct}%</span>` : ""}
+      </div>
+      <span class="hour-wind">${Math.round(hour.wind_kph)} <small>km/h</small></span>
     `;
     container.appendChild(card);
   });
