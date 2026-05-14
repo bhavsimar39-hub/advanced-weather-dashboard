@@ -29,21 +29,8 @@ REQUIRED_ENV.forEach((key) => {
 
 const app = express();
 
-// ─── CSP — allow all CDNs used by the frontend ──────────────
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc:  ["'self'"],
-      scriptSrc:   ["'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "'unsafe-inline'", "'unsafe-eval'"],
-      scriptSrcElem: ["'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
-      styleSrc:    ["'self'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "'unsafe-inline'"],
-      fontSrc:     ["'self'", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com", "data:"],
-      imgSrc:      ["'self'", "data:", "https://cdn.weatherapi.com", "https:"],
-      connectSrc:  ["'self'"],
-      workerSrc:   ["'self'", "blob:"],
-    },
-  },
-}));
+// ─── SECURITY — CSP disabled so all CDNs work freely ────────
+app.use(helmet({ contentSecurityPolicy: false }));
 
 const ALLOWED_ORIGINS = [
   "http://localhost:5500",
@@ -86,7 +73,6 @@ app.use("/api/auth",      authLimiter,    authRoutes);
 app.use("/api/weather",   weatherLimiter, weatherRoutes);
 app.use("/api/favorites",                 favoriteRoutes);
 
-// ─── CATCH ALL ──────────────────────────────────────────────
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
