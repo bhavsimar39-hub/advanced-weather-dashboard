@@ -36,15 +36,18 @@ const app = express();
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
-      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      "img-src":     ["'self'", "data:", "https://cdn.weatherapi.com"],
-      "script-src":  ["'self'", "https://cdnjs.cloudflare.com", "'unsafe-inline'"],
-      "connect-src": ["'self'"],
+      defaultSrc:  ["'self'"],
+      scriptSrc:   ["'self'", "https://cdnjs.cloudflare.com", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc:    ["'self'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "'unsafe-inline'"],
+      fontSrc:     ["'self'", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com"],
+      imgSrc:      ["'self'", "data:", "https://cdn.weatherapi.com", "https:"],
+      connectSrc:  ["'self'"],
+      workerSrc:   ["'self'", "blob:"],
     },
   },
 }));
 
-// When frontend is served from same origin, CORS is only needed for local dev
+// CORS — needed for local dev only (production serves from same origin)
 const ALLOWED_ORIGINS = [
   "http://localhost:5500",
   "http://127.0.0.1:5500",
@@ -78,9 +81,9 @@ app.use("/api", apiLimiter);
 // ─── HEALTH CHECK ───────────────────────────────────────────
 app.get("/health", (req, res) => {
   res.status(200).json({
-    status:   "ok",
-    dbState:  mongoose.connection.readyState === 1 ? "connected" : "disconnected",
-    uptime:   process.uptime(),
+    status:    "ok",
+    dbState:   mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    uptime:    process.uptime(),
     timestamp: new Date().toISOString(),
   });
 });
