@@ -1,24 +1,23 @@
 # Node modules
 node_modules/
+server/node_modules/
 
-# Environment variables
+# Environment files
 .env
+server/.env
 
 # Logs
 logs
 *.log
 npm-debug.log*
 
+# VS Code
+.vscode/
+
 # OS files
 .DS_Store
 Thumbs.db
 
-# VS Code settings
-.vscode/
-
-# Build files
+# Build folders
 dist/
 build/
-
-# Package lock optional
-# package-lock.json
