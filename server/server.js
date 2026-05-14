@@ -7,7 +7,6 @@ import mongoose          from "mongoose";
 import path              from "path";
 import { fileURLToPath } from "url";
 
-// ─── __dirname fix for ES Modules ───────────────────────────
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
 
@@ -20,7 +19,6 @@ import { apiLimiter, authLimiter, weatherLimiter } from "./middleware/ratelimite
 
 dotenv.config();
 
-// ─── VALIDATE ENV ───────────────────────────────────────────
 const REQUIRED_ENV = ["MONGO_URI", "JWT_SECRET", "WEATHER_API_KEY"];
 REQUIRED_ENV.forEach((key) => {
   if (!process.env[key]) {
@@ -29,17 +27,17 @@ REQUIRED_ENV.forEach((key) => {
   }
 });
 
-// ─── APP ────────────────────────────────────────────────────
 const app = express();
 
-// ─── SECURITY MIDDLEWARE ─────────────────────────────────────
+// ─── CSP — allow all CDNs used by the frontend ──────────────
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc:  ["'self'"],
-      scriptSrc:   ["'self'", "https://cdnjs.cloudflare.com", "'unsafe-inline'", "'unsafe-eval'"],
+      scriptSrc:   ["'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "'unsafe-inline'", "'unsafe-eval'"],
+      scriptSrcElem: ["'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
       styleSrc:    ["'self'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com", "'unsafe-inline'"],
-      fontSrc:     ["'self'", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com"],
+      fontSrc:     ["'self'", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com", "data:"],
       imgSrc:      ["'self'", "data:", "https://cdn.weatherapi.com", "https:"],
       connectSrc:  ["'self'"],
       workerSrc:   ["'self'", "blob:"],
@@ -47,7 +45,6 @@ app.use(helmet({
   },
 }));
 
-// CORS — needed for local dev only (production serves from same origin)
 const ALLOWED_ORIGINS = [
   "http://localhost:5500",
   "http://127.0.0.1:5500",
@@ -67,18 +64,15 @@ app.use(cors({
   credentials: true,
 }));
 
-// ─── BODY & LOGGING ─────────────────────────────────────────
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
-// ─── SERVE FRONTEND STATIC FILES ────────────────────────────
+// ─── SERVE FRONTEND ─────────────────────────────────────────
 app.use(express.static(path.join(__dirname, "public")));
 
-// ─── GLOBAL RATE LIMIT ──────────────────────────────────────
 app.use("/api", apiLimiter);
 
-// ─── HEALTH CHECK ───────────────────────────────────────────
 app.get("/health", (req, res) => {
   res.status(200).json({
     status:    "ok",
@@ -88,20 +82,17 @@ app.get("/health", (req, res) => {
   });
 });
 
-// ─── API ROUTES ─────────────────────────────────────────────
 app.use("/api/auth",      authLimiter,    authRoutes);
 app.use("/api/weather",   weatherLimiter, weatherRoutes);
 app.use("/api/favorites",                 favoriteRoutes);
 
-// ─── CATCH ALL — serve index.html for any non-API route ─────
+// ─── CATCH ALL ──────────────────────────────────────────────
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// ─── GLOBAL ERROR HANDLER ───────────────────────────────────
 app.use(errorHandler);
 
-// ─── START ──────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 
 async function start() {

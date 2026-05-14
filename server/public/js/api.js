@@ -2,8 +2,6 @@
    ATMOS — API LAYER
    ============================================================ */
 
-// ── When served from same origin (production on Render),
-//    use relative URLs. Works for both local dev and deployed.
 const WEATHER_URL   = "/api/weather";
 const AUTH_URL      = "/api/auth";
 const FAVORITES_URL = "/api/favorites";
@@ -26,8 +24,6 @@ async function request(url, options = {}) {
   return res.json();
 }
 
-// ── WEATHER ──────────────────────────────────────────────────
-
 export async function getWeather(city) {
   return request(`${WEATHER_URL}/${encodeURIComponent(city)}`, {
     auth: !!token(),
@@ -45,8 +41,6 @@ export async function getRecentSearches() {
     auth: !!token(),
   }).catch(() => []);
 }
-
-// ── AUTH ─────────────────────────────────────────────────────
 
 export async function registerUser(username, email, password) {
   return request(`${AUTH_URL}/register`, {
@@ -66,8 +60,6 @@ export async function loginUser(email, password) {
 
 export function logoutUser() { localStorage.removeItem("token"); }
 export function isLoggedIn() { return !!token(); }
-
-// ── FAVORITES ────────────────────────────────────────────────
 
 export async function getFavorites() {
   if (!token()) return [];
