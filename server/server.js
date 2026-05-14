@@ -1,9 +1,15 @@
-import express        from "express";
-import dotenv         from "dotenv";
-import cors           from "cors";
-import helmet         from "helmet";
-import morgan         from "morgan";
-import mongoose       from "mongoose";
+import express           from "express";
+import dotenv            from "dotenv";
+import cors              from "cors";
+import helmet            from "helmet";
+import morgan            from "morgan";
+import mongoose          from "mongoose";
+import path              from "path";
+import { fileURLToPath } from "url";
+
+// ─── __dirname fix for ES Modules ───────────────────────────
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = path.dirname(__filename);
 
 import connectDB      from "./config/db.js";
 import authRoutes     from "./routes/authRoutes.js";
@@ -31,20 +37,22 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      "img-src": ["'self'", "data:", "https://cdn.weatherapi.com"],
+      "img-src":     ["'self'", "data:", "https://cdn.weatherapi.com"],
+      "script-src":  ["'self'", "https://cdnjs.cloudflare.com", "'unsafe-inline'"],
+      "connect-src": ["'self'"],
     },
   },
 }));
 
+// When frontend is served from same origin, CORS is only needed for local dev
 const ALLOWED_ORIGINS = [
-  process.env.CLIENT_ORIGIN || "http://localhost:5500",
-  "http://127.0.0.1:5500",
   "http://localhost:5500",
-];
+  "http://127.0.0.1:5500",
+  process.env.CLIENT_ORIGIN,
+].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (Postman, curl, mobile apps)
     if (!origin || ALLOWED_ORIGINS.includes(origin)) {
       callback(null, true);
     } else {
@@ -61,27 +69,30 @@ app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
+// ─── SERVE FRONTEND STATIC FILES ────────────────────────────
+app.use(express.static(path.join(__dirname, "public")));
+
 // ─── GLOBAL RATE LIMIT ──────────────────────────────────────
 app.use("/api", apiLimiter);
 
 // ─── HEALTH CHECK ───────────────────────────────────────────
 app.get("/health", (req, res) => {
   res.status(200).json({
-    status: "ok",
-    dbState: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
-    uptime: process.uptime(),
+    status:   "ok",
+    dbState:  mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+    uptime:   process.uptime(),
     timestamp: new Date().toISOString(),
   });
 });
 
-// ─── ROUTES ─────────────────────────────────────────────────
+// ─── API ROUTES ─────────────────────────────────────────────
 app.use("/api/auth",      authLimiter,    authRoutes);
 app.use("/api/weather",   weatherLimiter, weatherRoutes);
 app.use("/api/favorites",                 favoriteRoutes);
 
-// ─── 404 ────────────────────────────────────────────────────
-app.use((req, res) => {
-  res.status(404).json({ message: `Route ${req.originalUrl} not found` });
+// ─── CATCH ALL — serve index.html for any non-API route ─────
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // ─── GLOBAL ERROR HANDLER ───────────────────────────────────
