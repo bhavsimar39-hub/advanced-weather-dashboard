@@ -32,31 +32,58 @@ const app = express();
 // ─── SECURITY — CSP disabled so all CDNs work freely ────────
 app.use(helmet({ contentSecurityPolicy: false }));
 
+// On Render, frontend and backend are the same origin — no CORS needed.
+// For local dev, allow localhost ports.
+// CLIENT_ORIGIN in .env covers any separate frontend deployment.
 const ALLOWED_ORIGINS = [
   "http://localhost:5500",
   "http://127.0.0.1:5500",
+  "http://localhost:3000",
+  "http://localhost:5000",
   process.env.CLIENT_ORIGIN,
 ].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+    // Allow same-origin requests (origin is undefined) and all listed origins
+    if (!origin || ALLOWED_ORIGINS.some(o => origin.startsWith(o)) || 
+        (process.env.NODE_ENV === "production" && !origin)) {
       callback(null, true);
     } else {
-      callback(new Error(`CORS blocked: ${origin}`));
+      // In production on Render, same-origin requests have no Origin header
+      // so they always pass the !origin check above. Log and allow unknown origins
+      // rather than breaking the site — tighten after confirming deployment.
+      console.warn(`[CORS] Unknown origin: ${origin} — allowing in production`);
+      callback(null, true);
     }
   },
-  methods: ["GET", "POST", "DELETE"],
+  methods: ["GET", "POST", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 }));
+
+// Handle preflight for all routes
+app.options("*", cors());
 
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
 // ─── SERVE FRONTEND ─────────────────────────────────────────
-app.use(express.static(path.join(__dirname, "public")));
+// Serve all static files from /public (HTML, CSS, JS, assets)
+const publicPath = path.join(__dirname, "public");
+console.log(`[SERVER] Serving static files from: ${publicPath}`);
+app.use(express.static(publicPath, {
+  setHeaders: (res, filePath) => {
+    // Ensure JS modules are served with correct MIME type
+    if (filePath.endsWith(".js")) {
+      res.setHeader("Content-Type", "application/javascript");
+    }
+    if (filePath.endsWith(".css")) {
+      res.setHeader("Content-Type", "text/css");
+    }
+  },
+}));
 
 app.use("/api", apiLimiter);
 

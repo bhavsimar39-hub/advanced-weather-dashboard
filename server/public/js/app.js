@@ -6,7 +6,7 @@ import {
   getWeather, getWeatherByCoords, getRecentSearches,
   loginUser, registerUser,
   addFavorite, removeFavorite, getFavorites,
-  isLoggedIn, logoutUser,
+  isLoggedIn, logoutUser, storage,
 } from "./api.js";
 
 import {
@@ -143,7 +143,7 @@ function updateAuthUI() {
   if (isLoggedIn()) {
     openAuthBtn.style.display = "none";
     userChip.style.display = "flex";
-    const name = localStorage.getItem("username") || "U";
+    const name = storage.get("username") || "U";
     userAvatar.textContent = name.charAt(0).toUpperCase();
     userAvatar.title = name;
   } else {
@@ -246,7 +246,7 @@ loginBtn.addEventListener("click", async () => {
   try {
     const data = await loginUser(email, password);
     if (data.token) {
-      if (data.user?.username) localStorage.setItem("username", data.user.username);
+      if (data.user?.username) storage.set("username", data.user.username);
       showToast("Welcome back! 👋", "success");
       closeModal();
       updateAuthUI();
@@ -278,7 +278,7 @@ registerBtn.addEventListener("click", async () => {
 // ─── LOGOUT ─────────────────────────────────────────────────
 logoutBtn?.addEventListener("click", () => {
   logoutUser();
-  localStorage.removeItem("username");
+  storage.remove("username");
   updateAuthUI();
   showToast("Signed out", "info");
   renderFavorites([], () => {}, () => {});
