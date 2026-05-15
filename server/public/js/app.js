@@ -6,7 +6,7 @@ import {
   getWeather, getWeatherByCoords, getRecentSearches,
   loginUser, registerUser,
   addFavorite, removeFavorite, getFavorites,
-  isLoggedIn, logoutUser, storage,
+  isLoggedIn, logoutUser,
 } from "./api.js";
 
 import {
@@ -31,7 +31,7 @@ const closeAuthBtn     = document.getElementById("close-auth-btn");
 const favoriteBtn      = document.getElementById("favorite-btn");
 const unitToggle       = document.getElementById("unit-toggle");
 const unitLabel        = document.getElementById("unit-label");
-const themeBtn         = document.getElementById("theme-btn");
+// theme toggle removed
 const userChip         = document.getElementById("user-chip");
 const userAvatar       = document.getElementById("user-avatar");
 const logoutBtn        = document.getElementById("logout-btn");
@@ -143,7 +143,7 @@ function updateAuthUI() {
   if (isLoggedIn()) {
     openAuthBtn.style.display = "none";
     userChip.style.display = "flex";
-    const name = storage.get("username") || "U";
+    const name = localStorage.getItem("username") || "U";
     userAvatar.textContent = name.charAt(0).toUpperCase();
     userAvatar.title = name;
   } else {
@@ -152,8 +152,6 @@ function updateAuthUI() {
   }
 }
 
-// ─── THEME ──────────────────────────────────────────────────
-themeBtn.addEventListener("click", () => document.body.classList.toggle("light"));
 
 // ─── UNIT TOGGLE ────────────────────────────────────────────
 unitToggle.addEventListener("click", () => {
@@ -246,7 +244,7 @@ loginBtn.addEventListener("click", async () => {
   try {
     const data = await loginUser(email, password);
     if (data.token) {
-      if (data.user?.username) storage.set("username", data.user.username);
+      if (data.user?.username) localStorage.setItem("username", data.user.username);
       showToast("Welcome back! 👋", "success");
       closeModal();
       updateAuthUI();
@@ -278,7 +276,7 @@ registerBtn.addEventListener("click", async () => {
 // ─── LOGOUT ─────────────────────────────────────────────────
 logoutBtn?.addEventListener("click", () => {
   logoutUser();
-  storage.remove("username");
+  localStorage.removeItem("username");
   updateAuthUI();
   showToast("Signed out", "info");
   renderFavorites([], () => {}, () => {});
