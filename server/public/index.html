@@ -107,13 +107,16 @@
   <!-- APP WRAPPER -->
   <div class="app-wrapper">
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div class="sidebar-logo">
+    <!-- TOP NAVBAR -->
+    <header class="topnav">
+      <!-- Left: Logo -->
+      <div class="topnav-logo">
         <i class="fa-solid fa-cloud-sun-rain"></i>
         <span>Atmos</span>
       </div>
-      <nav class="sidebar-nav">
+
+      <!-- Center: Nav links (desktop) -->
+      <nav class="topnav-links">
         <a href="#" class="nav-item active" data-section="main">
           <i class="fa-solid fa-house-chimney"></i><span>Overview</span>
         </a>
@@ -127,29 +130,9 @@
           <i class="fa-solid fa-heart"></i><span>Favorites</span>
         </a>
       </nav>
-      <div class="sidebar-bottom">
-        <button class="unit-toggle" id="unit-toggle"><span id="unit-label">°C</span></button>
-        <button class="theme-btn"   id="theme-btn"><i class="fa-solid fa-circle-half-stroke"></i></button>
-        <button class="auth-open-btn" id="open-auth-btn" title="Sign in">
-          <i class="fa-regular fa-user"></i>
-        </button>
-        <div class="user-chip" id="user-chip" style="display:none">
-          <div class="user-avatar" id="user-avatar">A</div>
-          <button class="logout-btn" id="logout-btn" title="Sign out">
-            <i class="fa-solid fa-arrow-right-from-bracket"></i>
-          </button>
-        </div>
-      </div>
-    </aside>
 
-    <!-- MAIN CONTENT -->
-    <main class="main-content">
-
-      <!-- WEATHER ALERTS -->
-      <div id="alerts-banner" style="display:none"></div>
-
-      <!-- TOP BAR -->
-      <div class="topbar">
+      <!-- Right: Search + Clock + Controls -->
+      <div class="topnav-right">
         <div class="search-wrap">
           <i class="fa-solid fa-magnifying-glass"></i>
           <input type="text" id="search-input" placeholder="Search any city..." />
@@ -158,12 +141,40 @@
           </button>
           <button id="search-btn">Search</button>
         </div>
-        <div class="topbar-right">
+        <div class="topnav-clock">
           <div class="live-clock" id="live-clock">--:--</div>
           <div class="live-date"  id="live-date">---</div>
         </div>
-
+        <div class="topnav-actions">
+          <button class="unit-toggle" id="unit-toggle" title="Toggle unit">
+            <span id="unit-label">°C</span>
+          </button>
+          <button class="theme-btn" id="theme-btn" title="Toggle theme">
+            <i class="fa-solid fa-circle-half-stroke"></i>
+          </button>
+          <button class="auth-open-btn" id="open-auth-btn" title="Sign in">
+            <i class="fa-regular fa-user"></i>
+          </button>
+          <div class="user-chip" id="user-chip" style="display:none">
+            <div class="user-avatar" id="user-avatar">A</div>
+            <button class="logout-btn" id="logout-btn" title="Sign out">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </button>
+          </div>
+        </div>
       </div>
+
+      <!-- Mobile hamburger -->
+      <button class="topnav-hamburger" id="topnav-hamburger">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+      <!-- WEATHER ALERTS -->
+      <div id="alerts-banner" style="display:none"></div>
 
       <!-- HERO -->
       <section class="hero-section">
@@ -405,7 +416,6 @@
     document.querySelectorAll(".mobile-nav-item[data-section]").forEach(btn => {
       btn.addEventListener("click", () => {
         document.querySelectorAll(".mobile-nav-item").forEach(b => b.classList.remove("active"));
-        // Also sync desktop nav
         document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         const match = document.querySelector(`.nav-item[data-section="${btn.dataset.section}"]`);
@@ -414,6 +424,19 @@
         if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
       });
     });
+
+    // Hamburger: toggle mobile dropdown nav
+    const hamburger = document.getElementById("topnav-hamburger");
+    const topnavLinks = document.querySelector(".topnav-links");
+    if (hamburger && topnavLinks) {
+      hamburger.addEventListener("click", () => {
+        topnavLinks.classList.toggle("open");
+        hamburger.querySelector("i").className =
+          topnavLinks.classList.contains("open")
+            ? "fa-solid fa-xmark"
+            : "fa-solid fa-bars";
+      });
+    }
     // Mobile account button opens auth modal
     const mobileAuthBtn = document.getElementById("mobile-auth-btn");
     if (mobileAuthBtn) {
