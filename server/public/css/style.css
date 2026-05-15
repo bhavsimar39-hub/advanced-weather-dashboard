@@ -338,12 +338,21 @@ body {
   cursor: pointer; transition: var(--transition); white-space: nowrap;
 }
 .search-wrap button:hover { background: #0ea5e9; transform: scale(1.03); }
-.topbar-right { text-align: right; }
-.live-clock {
-  font-family: var(--font-mono); font-size: 1.5rem; font-weight: 500;
-  color: var(--text-1); line-height: 1;
+.topbar-right {
+  text-align: right;
+  margin-left: auto;
+  flex-shrink: 0;
+  padding-left: 24px;
 }
-.live-date { font-size: 0.78rem; color: var(--text-2); margin-top: 4px; }
+.live-clock {
+  font-family: var(--font-mono); font-size: 1.65rem; font-weight: 500;
+  color: #ffffff; line-height: 1; letter-spacing: 0.5px;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.4);
+}
+.live-date {
+  font-size: 0.8rem; color: rgba(180,205,230,0.85);
+  margin-top: 5px; letter-spacing: 0.3px;
+}
 
 /* ============================================================
    HERO SECTION
