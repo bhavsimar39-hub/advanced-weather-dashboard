@@ -1448,10 +1448,28 @@ body[data-weather="clear"] .hero-section {
 @media (max-width: 768px) {
   :root { --topnav-h: 54px; }
 
-  /* Topnav */
-  .topnav { height: 54px; padding: 0 12px; gap: 8px; }
+  /* ── Topnav: Logo | [Search flex] | °C | User | ☰ ── */
+  .topnav {
+    height: 54px;
+    padding: 0 10px;
+    gap: 6px;
+    /* Force single row, no wrap */
+    flex-wrap: nowrap;
+    overflow: visible;
+  }
+
+  /* Logo: icon only */
+  .topnav-logo { flex-shrink: 0; gap: 0; }
   .topnav-logo span { display: none; }
-  .topnav-logo i { font-size: 1.3rem; }
+  .topnav-logo i {
+    font-size: 1.25rem;
+    /* ensure gradient renders */
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Nav links: hidden, dropdown via hamburger */
   .topnav-links {
     display: none;
     position: fixed; top: 54px; left: 0; right: 0;
@@ -1464,24 +1482,77 @@ body[data-weather="clear"] .hero-section {
   }
   .topnav-links.open { display: flex; }
   .nav-item { padding: 11px 14px; border-radius: 12px; }
-  .nav-item span { display: inline; }
-  .topnav-right { gap: 6px; flex: 1; min-width: 0; }
+  .nav-item span { display: inline; font-size: 0.88rem; }
+
+  /* Right section: search flex + fixed actions */
+  .topnav-right {
+    flex: 1;
+    min-width: 0;
+    gap: 6px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  /* Search: takes remaining space */
   .search-wrap {
-    flex: 1; min-width: 0; max-width: none;
-    padding: 7px 10px; gap: 6px; border-radius: 14px;
+    flex: 1;
+    min-width: 0;
+    max-width: none;
+    padding: 6px 8px;
+    gap: 5px;
+    border-radius: 12px;
   }
   .search-wrap > i { display: none; }
-  .search-wrap input { font-size: 0.82rem; }
-  #search-btn { padding: 6px 10px; font-size: 0.78rem; flex-shrink: 0; }
-  .location-btn { width: 28px; height: 28px; font-size: 0.8rem; flex-shrink: 0; }
+  .search-wrap input {
+    font-size: 0.8rem;
+    min-width: 0;
+    width: 100%;
+  }
+  #search-btn {
+    padding: 5px 10px;
+    font-size: 0.76rem;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .location-btn {
+    width: 26px; height: 26px;
+    font-size: 0.75rem; flex-shrink: 0;
+  }
+
+  /* Clock: hidden */
   .topnav-clock { display: none; }
-  .topnav-actions { gap: 4px; flex-shrink: 0; }
-  .unit-toggle, .auth-open-btn { width: 32px; height: 32px; font-size: 0.75rem; }
-  .user-avatar { width: 28px; height: 28px; font-size: 0.72rem; }
-  .logout-btn { width: 26px; height: 26px; font-size: 0.72rem; }
+
+  /* Actions: °C + user — always visible, never shrink */
+  .topnav-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  .unit-toggle {
+    width: 30px; height: 30px;
+    font-size: 0.72rem; flex-shrink: 0;
+  }
+  .auth-open-btn {
+    width: 30px; height: 30px;
+    font-size: 0.82rem; flex-shrink: 0;
+  }
+  .user-chip {
+    display: flex; align-items: center; gap: 3px; flex-shrink: 0;
+  }
+  .user-avatar {
+    width: 28px; height: 28px; font-size: 0.7rem;
+  }
+  .logout-btn {
+    width: 26px; height: 26px; font-size: 0.7rem;
+  }
+
+  /* Hamburger: always last, always visible */
   .topnav-hamburger {
     display: flex; align-items: center; justify-content: center;
-    width: 32px; height: 32px; flex-shrink: 0;
+    width: 30px; height: 30px;
+    flex-shrink: 0; font-size: 1rem;
   }
 
   /* Main content */
