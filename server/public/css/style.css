@@ -1403,57 +1403,185 @@ body[data-weather="clear"] .hero-section {
    TOPNAV RESPONSIVE
    ============================================================ */
 
-/* Tablet ≤1100px — hide nav link labels, shrink search */
+/* ============================================================
+   MOBILE BOTTOM NAV — base styles (desktop: hidden)
+   ============================================================ */
+.mobile-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  z-index: 300;
+  background: rgba(3,7,18,0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid rgba(255,255,255,0.09);
+  padding: 6px 0 max(6px, env(safe-area-inset-bottom));
+  justify-content: space-around; align-items: center;
+}
+.mobile-nav-item {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 3px; padding: 5px 12px;
+  color: var(--text-3); font-size: 0.6rem;
+  font-family: var(--font-body); letter-spacing: 0.3px;
+  border-radius: 10px; transition: var(--transition);
+  cursor: pointer; background: none; border: none;
+}
+.mobile-nav-item i { font-size: 1.05rem; }
+.mobile-nav-item.active { color: var(--accent); }
+.mobile-nav-item.active i { filter: drop-shadow(0 0 5px rgba(56,189,248,0.5)); }
+
+/* ============================================================
+   RESPONSIVE — TABLET ≤1100px
+   ============================================================ */
 @media (max-width: 1100px) {
-  .topnav { gap: 12px; padding: 0 18px; }
+  .topnav { gap: 10px; padding: 0 18px; }
   .nav-item span { display: none; }
-  .nav-item { padding: 9px 11px; }
-  .search-wrap { max-width: 280px; }
+  .nav-item { padding: 8px 10px; }
   .topnav-clock { display: none; }
+  .search-wrap { max-width: 260px; }
+  .stats-grid { grid-template-columns: repeat(4, 1fr); }
+  .twin-row { grid-template-columns: 1fr; }
 }
 
-/* Mobile ≤768px — hamburger menu, hide nav links inline */
+/* ============================================================
+   RESPONSIVE — MOBILE ≤768px
+   ============================================================ */
 @media (max-width: 768px) {
-  .topnav { padding: 0 16px; gap: 10px; height: 56px; }
-  --topnav-h: 56px;
+  :root { --topnav-h: 54px; }
 
-  /* Hide nav links — shown via hamburger dropdown */
+  /* Topnav */
+  .topnav { height: 54px; padding: 0 12px; gap: 8px; }
+  .topnav-logo span { display: none; }
+  .topnav-logo i { font-size: 1.3rem; }
   .topnav-links {
     display: none;
-    position: fixed; top: 56px; left: 0; right: 0;
+    position: fixed; top: 54px; left: 0; right: 0;
     flex-direction: column; gap: 4px;
     background: rgba(3,7,18,0.97);
     backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
     border-bottom: 1px solid rgba(255,255,255,0.08);
-    padding: 12px 16px 16px;
-    z-index: 99;
+    padding: 10px 12px 14px; z-index: 200;
   }
   .topnav-links.open { display: flex; }
-  .nav-item { padding: 12px 16px; border-radius: 12px; font-size: 0.9rem; }
+  .nav-item { padding: 11px 14px; border-radius: 12px; }
   .nav-item span { display: inline; }
-
-  /* Show hamburger */
-  .topnav-hamburger { display: flex; align-items: center; justify-content: center; }
-
-  /* Shrink search */
-  .topnav-right { gap: 8px; }
-  .search-wrap { max-width: 200px; padding: 9px 12px; }
-  .search-wrap input { font-size: 0.85rem; }
-
-  /* Hide clock and action labels on small screens */
+  .topnav-right { gap: 6px; flex: 1; min-width: 0; }
+  .search-wrap {
+    flex: 1; min-width: 0; max-width: none;
+    padding: 7px 10px; gap: 6px; border-radius: 14px;
+  }
+  .search-wrap > i { display: none; }
+  .search-wrap input { font-size: 0.82rem; }
+  #search-btn { padding: 6px 10px; font-size: 0.78rem; flex-shrink: 0; }
+  .location-btn { width: 28px; height: 28px; font-size: 0.8rem; flex-shrink: 0; }
   .topnav-clock { display: none; }
+  .topnav-actions { gap: 4px; flex-shrink: 0; }
+  .unit-toggle, .auth-open-btn { width: 32px; height: 32px; font-size: 0.75rem; }
+  .user-avatar { width: 28px; height: 28px; font-size: 0.72rem; }
+  .logout-btn { width: 26px; height: 26px; font-size: 0.72rem; }
+  .topnav-hamburger {
+    display: flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; flex-shrink: 0;
+  }
 
-  /* Main content below fixed topnav */
-  .main-content { margin-top: 56px; padding: 12px 14px 80px; gap: 14px; }
+  /* Main content */
+  .main-content { margin-top: 54px; padding: 10px 10px 80px; gap: 12px; }
 
-  /* Mobile nav still shows at bottom */
+  /* Hero */
+  .hero-section { padding: 18px 16px; border-radius: 18px; }
+  .hero-temp span { font-size: 3.8rem; }
+  .temp-unit { font-size: 1.3rem; margin-top: 10px; }
+  .hero-location h2 { font-size: 1rem; }
+  .hero-condition { font-size: 0.95rem; }
+  .hero-minmax { font-size: 0.82rem; margin-bottom: 14px; }
+  .hero-precip-summary { font-size: 0.78rem; margin: 4px 0 8px; }
+  .fav-btn { padding: 8px 14px; font-size: 0.82rem; }
+
+  /* Stats: 2 cols */
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .stat-card { padding: 12px; }
+  .stat-label { font-size: 0.6rem; }
+  .stat-value { font-size: 0.95rem; }
+  .stat-icon { width: 28px; height: 28px; font-size: 0.8rem; }
+
+  /* Twin rows stack */
+  .twin-row { grid-template-columns: 1fr; gap: 12px; }
+
+  /* Panels */
+  .panel { padding: 14px 12px; border-radius: 16px; }
+  .panel-header { margin-bottom: 10px; flex-wrap: wrap; gap: 6px; }
+  .panel-header h3 { font-size: 0.82rem; }
+
+  /* Forecast */
+  .forecast-card {
+    grid-template-columns: 40px 32px 24px auto 1fr auto;
+    gap: 6px; padding: 9px 10px;
+  }
+  .forecast-day { font-size: 0.8rem; }
+  .forecast-card img { width: 22px; height: 22px; }
+  .forecast-temp-low, .forecast-temp-high { font-size: 0.78rem; min-width: 28px; }
+  .forecast-temp-bar-wrap { min-width: 40px; }
+  .forecast-precip { font-size: 0.62rem; min-width: 26px; }
+
+  /* Hourly */
+  .hourly-container { gap: 6px; }
+  .hour-card { min-width: 58px; padding: 10px 6px; gap: 4px; border-radius: 12px; }
+  .hour-time { font-size: 0.65rem; }
+  .hour-temp { font-size: 0.85rem; }
+  .hour-wind { font-size: 0.6rem; }
+  .hour-rain-bar { height: 4px; }
+  .hour-rain-pct { font-size: 0.58rem; }
+  .hour-card img { width: 20px; height: 20px; }
+
+  /* Chart */
+  .chart-panel canvas { max-height: 160px; }
+  .chart-toggle { padding: 4px 8px; font-size: 0.7rem; }
+  .chart-toggles { gap: 4px; }
+
+  /* Lifestyle */
+  .lifestyle-grid { grid-template-columns: 1fr; gap: 8px; }
+  .lifestyle-card { padding: 12px; border-radius: 14px; }
+  .lifestyle-card-title { font-size: 0.78rem; }
+  .lifestyle-tips-list li { font-size: 0.74rem; }
+  .lifestyle-icon { width: 28px; height: 28px; font-size: 0.78rem; }
+  .lifestyle-card-header { margin-bottom: 10px; }
+
+  /* Sun & UV */
+  .sun-arc-svg { max-width: 170px; }
+  .sun-time-item b { font-size: 0.82rem; }
+  .sun-time-item span { font-size: 0.65rem; }
+  .uv-label { font-size: 0.72rem; }
+  .uv-row, .moon-row { margin-top: 10px; padding-top: 8px; }
+
+  /* Toast */
+  .toast-container { top: 62px; right: 10px; left: 10px; }
+  .toast { min-width: unset; width: 100%; font-size: 0.82rem; padding: 10px 14px; }
+
+  /* Modal */
+  .modal-box {
+    width: calc(100% - 24px); max-width: 420px;
+    padding: 28px 20px; border-radius: 20px;
+  }
+  .modal-left { display: none; }
+
+  /* Show bottom nav */
   .mobile-nav { display: flex; }
 }
 
-/* Very small ≤420px */
+/* ============================================================
+   RESPONSIVE — SMALL MOBILE ≤420px
+   ============================================================ */
 @media (max-width: 420px) {
-  .search-wrap { max-width: 160px; }
-  #search-btn { padding: 6px 10px; font-size: 0.78rem; }
-  .topnav-actions .unit-toggle,
-  .topnav-actions .theme-btn { width: 32px; height: 32px; font-size: 0.75rem; }
+  .topnav { padding: 0 8px; gap: 6px; }
+  .search-wrap { padding: 6px 8px; }
+  .search-wrap input { font-size: 0.76rem; }
+  #search-btn { padding: 5px 8px; font-size: 0.72rem; }
+  .unit-toggle, .auth-open-btn { width: 28px; height: 28px; }
+  .topnav-hamburger { width: 28px; height: 28px; }
+  .main-content { padding: 8px 8px 76px; gap: 10px; }
+  .hero-temp span { font-size: 3.2rem; }
+  .stats-grid { gap: 6px; }
+  .stat-card { padding: 10px; }
+  .hour-card { min-width: 52px; }
+  .lifestyle-grid { gap: 6px; }
 }
