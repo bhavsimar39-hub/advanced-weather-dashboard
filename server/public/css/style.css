@@ -1684,7 +1684,7 @@ body[data-weather="clear"] .hero-section {
   filter: drop-shadow(0 0 8px rgba(56,189,248,0.30));
 }
 
-/* Fix: allow all 7 forecast days to show */
+/* Fix: allow all 7 forecast days to show  s*/
 .forecast-panel {
   overflow: visible !important;
 }
