@@ -532,30 +532,36 @@ body {
 /* ============================================================
    TWIN ROW
    ============================================================ */
-.twin-row { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+.twin-row { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: start; }
 
 /* ============================================================
    FORECAST
    ============================================================ */
-.forecast-container { display: flex; flex-direction: column; gap: 8px; }
+.forecast-container { display: flex; flex-direction: column; }
 .forecast-card {
-  display: flex; align-items: center; gap: 14px;
-  padding: 12px 16px; border-radius: var(--radius-md);
-  background: rgba(255,255,255,0.02); border: 1px solid var(--panel-border);
-  transition: var(--transition);
+  display: grid;
+  grid-template-columns: 52px 40px 32px auto 1fr auto;
+  align-items: center;
+  gap: 12px; padding: 11px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: background 0.15s;
 }
-.forecast-card:hover { background: var(--panel-hover); transform: translateX(4px); }
-.forecast-day {
-  font-family: var(--font-head); font-size: 0.88rem; font-weight: 600;
-  width: 46px; color: var(--text-2); flex-shrink: 0;
+.forecast-card:last-child { border-bottom: none; }
+.forecast-card:hover { background: rgba(255,255,255,0.04); border-radius: 10px; }
+.forecast-day { font-size: 0.9rem; color: var(--text-1); font-weight: 600; min-width: 52px; }
+.forecast-precip { font-size: 0.72rem; display: flex; flex-direction: column; gap: 1px; min-width: 36px; }
+.fc-rain { color: #60a5fa; }
+.fc-snow { color: #a5f3fc; }
+.forecast-card img { width: 30px; height: 30px; }
+.forecast-temp-low  { font-size: 0.88rem; color: var(--text-2); min-width: 38px; text-align: right; }
+.forecast-temp-high { font-size: 0.88rem; color: var(--text-1); font-weight: 600; min-width: 38px; text-align: right; }
+.forecast-temp-bar-wrap { min-width: 60px; }
+.forecast-temp-bar { height: 5px; background: rgba(255,255,255,0.12); border-radius: 99px; position: relative; }
+.forecast-temp-bar-fill {
+  position: absolute; top: 0; height: 100%;
+  background: linear-gradient(90deg, #38bdf8, #fbbf24);
+  border-radius: 99px; min-width: 10px;
 }
-.forecast-card img { width: 38px; height: 38px; object-fit: contain; flex-shrink: 0; }
-.forecast-condition { flex: 1; font-size: 0.83rem; color: var(--text-2); }
-.forecast-temp-range {
-  display: flex; gap: 10px; font-family: var(--font-mono); font-size: 0.88rem;
-}
-.forecast-temp-high { color: var(--accent-warm); font-weight: 500; }
-.forecast-temp-low  { color: var(--text-3); }
 
 /* ============================================================
    SUN PANEL
@@ -1448,28 +1454,10 @@ body[data-weather="clear"] .hero-section {
 @media (max-width: 768px) {
   :root { --topnav-h: 54px; }
 
-  /* ── Topnav: Logo | [Search flex] | °C | User | ☰ ── */
-  .topnav {
-    height: 54px;
-    padding: 0 10px;
-    gap: 6px;
-    /* Force single row, no wrap */
-    flex-wrap: nowrap;
-    overflow: visible;
-  }
-
-  /* Logo: icon only */
-  .topnav-logo { flex-shrink: 0; gap: 0; }
+  /* Topnav */
+  .topnav { height: 54px; padding: 0 12px; gap: 8px; }
   .topnav-logo span { display: none; }
-  .topnav-logo i {
-    font-size: 1.25rem;
-    /* ensure gradient renders */
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-  }
-
-  /* Nav links: hidden, dropdown via hamburger */
+  .topnav-logo i { font-size: 1.3rem; }
   .topnav-links {
     display: none;
     position: fixed; top: 54px; left: 0; right: 0;
@@ -1482,77 +1470,24 @@ body[data-weather="clear"] .hero-section {
   }
   .topnav-links.open { display: flex; }
   .nav-item { padding: 11px 14px; border-radius: 12px; }
-  .nav-item span { display: inline; font-size: 0.88rem; }
-
-  /* Right section: search flex + fixed actions */
-  .topnav-right {
-    flex: 1;
-    min-width: 0;
-    gap: 6px;
-    display: flex;
-    align-items: center;
-    overflow: hidden;
-  }
-
-  /* Search: takes remaining space */
+  .nav-item span { display: inline; }
+  .topnav-right { gap: 6px; flex: 1; min-width: 0; }
   .search-wrap {
-    flex: 1;
-    min-width: 0;
-    max-width: none;
-    padding: 6px 8px;
-    gap: 5px;
-    border-radius: 12px;
+    flex: 1; min-width: 0; max-width: none;
+    padding: 7px 10px; gap: 6px; border-radius: 14px;
   }
   .search-wrap > i { display: none; }
-  .search-wrap input {
-    font-size: 0.8rem;
-    min-width: 0;
-    width: 100%;
-  }
-  #search-btn {
-    padding: 5px 10px;
-    font-size: 0.76rem;
-    flex-shrink: 0;
-    white-space: nowrap;
-  }
-  .location-btn {
-    width: 26px; height: 26px;
-    font-size: 0.75rem; flex-shrink: 0;
-  }
-
-  /* Clock: hidden */
+  .search-wrap input { font-size: 0.82rem; }
+  #search-btn { padding: 6px 10px; font-size: 0.78rem; flex-shrink: 0; }
+  .location-btn { width: 28px; height: 28px; font-size: 0.8rem; flex-shrink: 0; }
   .topnav-clock { display: none; }
-
-  /* Actions: °C + user — always visible, never shrink */
-  .topnav-actions {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    flex-shrink: 0;
-  }
-  .unit-toggle {
-    width: 30px; height: 30px;
-    font-size: 0.72rem; flex-shrink: 0;
-  }
-  .auth-open-btn {
-    width: 30px; height: 30px;
-    font-size: 0.82rem; flex-shrink: 0;
-  }
-  .user-chip {
-    display: flex; align-items: center; gap: 3px; flex-shrink: 0;
-  }
-  .user-avatar {
-    width: 28px; height: 28px; font-size: 0.7rem;
-  }
-  .logout-btn {
-    width: 26px; height: 26px; font-size: 0.7rem;
-  }
-
-  /* Hamburger: always last, always visible */
+  .topnav-actions { gap: 4px; flex-shrink: 0; }
+  .unit-toggle, .auth-open-btn { width: 32px; height: 32px; font-size: 0.75rem; }
+  .user-avatar { width: 28px; height: 28px; font-size: 0.72rem; }
+  .logout-btn { width: 26px; height: 26px; font-size: 0.72rem; }
   .topnav-hamburger {
     display: flex; align-items: center; justify-content: center;
-    width: 30px; height: 30px;
-    flex-shrink: 0; font-size: 1rem;
+    width: 32px; height: 32px; flex-shrink: 0;
   }
 
   /* Main content */
@@ -1656,6 +1591,7 @@ body[data-weather="clear"] .hero-section {
   .hour-card { min-width: 52px; }
   .lifestyle-grid { gap: 6px; }
 }
+
 
 /* ============================================================
    ATMOS LOGO — paste at the very bottom of style.css
