@@ -42,9 +42,67 @@ function stopAnimation() {
   if (lightningTimer) { clearTimeout(lightningTimer); lightningTimer = null; }
 }
 
-// ── Classify condition string ────────────────────────────────
-function classify(condition) {
-  const c = condition.toLowerCase();
+// ── WeatherAPI complete condition code map ───────────────────
+// Every code from weatherapi.com/docs/weather-conditions mapped
+// to an internal type. 100% accurate — no keyword guessing.
+const CONDITION_CODES = {
+  1000: "sunny",     // Sunny / Clear
+  1003: "cloudy",    // Partly cloudy
+  1006: "cloudy",    // Cloudy
+  1009: "cloudy",    // Overcast
+  1030: "fog",       // Mist
+  1063: "rain",      // Patchy rain possible
+  1066: "snow",      // Patchy snow possible
+  1069: "snow",      // Patchy sleet possible
+  1072: "rain",      // Patchy freezing drizzle possible
+  1087: "thunder",   // Thundery outbreaks possible
+  1114: "blizzard",  // Blowing snow
+  1117: "blizzard",  // Blizzard
+  1135: "fog",       // Fog
+  1147: "fog",       // Freezing fog
+  1150: "rain",      // Patchy light drizzle
+  1153: "rain",      // Light drizzle
+  1168: "rain",      // Freezing drizzle
+  1171: "heavyrain", // Heavy freezing drizzle
+  1180: "rain",      // Patchy light rain
+  1183: "rain",      // Light rain
+  1186: "rain",      // Moderate rain at times
+  1189: "rain",      // Moderate rain
+  1192: "heavyrain", // Heavy rain at times
+  1195: "heavyrain", // Heavy rain
+  1198: "rain",      // Light freezing rain
+  1201: "heavyrain", // Moderate or heavy freezing rain
+  1204: "snow",      // Light sleet
+  1207: "snow",      // Moderate or heavy sleet
+  1210: "snow",      // Patchy light snow
+  1213: "snow",      // Light snow
+  1216: "snow",      // Patchy moderate snow
+  1219: "snow",      // Moderate snow
+  1222: "snow",      // Patchy heavy snow
+  1225: "blizzard",  // Heavy snow
+  1237: "snow",      // Ice pellets
+  1240: "rain",      // Light rain shower
+  1243: "heavyrain", // Moderate or heavy rain shower
+  1246: "heavyrain", // Torrential rain shower
+  1249: "snow",      // Light sleet showers
+  1252: "snow",      // Moderate or heavy sleet showers
+  1255: "snow",      // Light snow showers
+  1258: "snow",      // Moderate or heavy snow showers
+  1261: "snow",      // Light showers of ice pellets
+  1264: "snow",      // Moderate or heavy showers of ice pellets
+  1273: "thunder",   // Patchy light rain with thunder
+  1276: "thunder",   // Moderate or heavy rain with thunder
+  1279: "thunder",   // Patchy light snow with thunder
+  1282: "thunder",   // Moderate or heavy snow with thunder
+};
+
+// ── Classify by condition CODE — accepts code number or text ─
+// Used for canvas animations (always has condition text available)
+function classify(conditionText, code) {
+  // Prefer code if available
+  if (code && CONDITION_CODES[code]) return CONDITION_CODES[code];
+  // Text fallback
+  const c = conditionText.toLowerCase();
   if (c.includes("thunder") || c.includes("storm"))          return "thunder";
   if (c.includes("blizzard") || c.includes("heavy snow"))    return "blizzard";
   if (c.includes("snow") || c.includes("sleet") || c.includes("ice")) return "snow";
@@ -52,13 +110,22 @@ function classify(condition) {
   if (c.includes("rain") || c.includes("drizzle") || c.includes("shower")) return "rain";
   if (c.includes("mist") || c.includes("fog") || c.includes("haze"))  return "fog";
   if (c.includes("overcast") || c.includes("cloud"))         return "cloudy";
-  if (c.includes("sunny") || c.includes("clear"))            return "sunny";
-  return "clear";
+  return "sunny";
 }
 
-// ── Day/night-aware classifier for background photos ────────
-function classifyWithTime(condition, isDay) {
-  const c = condition.toLowerCase();
+// ── Code-aware day/night classifier for backgrounds ──────────
+function classifyWithTime(conditionText, isDay, code) {
+  // Use code for accuracy
+  if (code && CONDITION_CODES[code]) {
+    const type = CONDITION_CODES[code];
+    // Only code 1000 (Clear/Sunny) splits by day/night
+    if (code === 1000) return isDay ? "sunny" : "clear";
+    // Partly cloudy at night → slightly different mood
+    if (code === 1003 && !isDay) return "cloudy";
+    return type;
+  }
+  // Text fallback
+  const c = conditionText.toLowerCase();
   if (c.includes("thunder") || c.includes("storm"))           return "thunder";
   if (c.includes("blizzard") || c.includes("heavy snow"))     return "blizzard";
   if (c.includes("snow") || c.includes("sleet") || c.includes("ice")) return "snow";
@@ -66,9 +133,6 @@ function classifyWithTime(condition, isDay) {
   if (c.includes("rain") || c.includes("drizzle") || c.includes("shower")) return "rain";
   if (c.includes("mist") || c.includes("fog") || c.includes("haze")) return "fog";
   if (c.includes("overcast") || c.includes("cloud"))          return "cloudy";
-  // For clear/sunny: use is_day to pick day photo vs night photo
-  if (c.includes("sunny") || c.includes("clear"))
-    return isDay ? "sunny" : "clear";
   return isDay ? "sunny" : "clear";
 }
 
@@ -106,7 +170,7 @@ function drawBaseGradient(ctx, W, H, colors) {
 // ──────────────────────────────────────────────────────────────
 function animateRain(canvas, ctx, count = 120, speed = 14, opacity = 0.45, angle = 12) {
   const W = canvas.width, H = canvas.height;
-  const type = classify("rain");
+  // canvas rain animation — type fixed
   const drops = Array.from({ length: count }, () => ({
     x:     Math.random() * W,
     y:     Math.random() * H,
@@ -577,7 +641,7 @@ function setBgPhoto(type) {
 // ──────────────────────────────────────────────────────────────
 //  PUBLIC: updateBackground
 // ──────────────────────────────────────────────────────────────
-export function updateBackground(condition, isDay = true) {
+export function updateBackground(condition, isDay = true, code = null) {
   const canvas = document.getElementById("bg-canvas");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
@@ -592,14 +656,15 @@ export function updateBackground(condition, isDay = true) {
   // Handle resize — restart on window resize
   window._weatherCondition = condition;
   window._weatherIsDay     = isDay;
+  window._weatherCode      = code;
   window.onresize = () => {
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
-    updateBackground(window._weatherCondition || condition, window._weatherIsDay ?? true);
+    updateBackground(window._weatherCondition || condition, window._weatherIsDay ?? true, window._weatherCode ?? code);
   };
 
   // Pass is_day into classify so clear night ≠ sunny
-  const type = classifyWithTime(condition, isDay);
+  const type = classifyWithTime(condition, isDay, code);
 
   // ── Tag body with weather type for CSS accent tints ──
   document.body.dataset.weather = type;
@@ -711,9 +776,9 @@ export function updateUI(data) {
   renderAlerts(alerts?.alert || []);
 
   renderForecast(forecast.forecastday);
-  renderHourly(forecast.forecastday[0].hour);
+  renderHourly(forecast.forecastday[0].hour, forecast.forecastday[1]?.hour || []);
   renderLifestyleTips(data);
-  updateBackground(current.condition.text, current.is_day === 1);
+  updateBackground(current.condition.text, current.is_day === 1, current.condition.code);
 }
 
 /* ============================================================
@@ -822,24 +887,28 @@ function renderForecast(days) {
 /* ============================================================
    HOURLY
    ============================================================ */
-function renderHourly(hours) {
+function renderHourly(todayHours, tomorrowHours = []) {
   const container = $("hourly-container");
   container.innerHTML = "";
   const nowH = new Date().getHours();
-  // Show from current hour onwards, then wrap
-  const sorted = [...hours.slice(nowH), ...hours.slice(0, nowH)];
 
-  sorted.forEach((hour) => {
-    const h    = parseInt(hour.time.split(" ")[1]);
-    const card = document.createElement("div");
-    card.className = "hour-card" + (h === nowH ? " now" : "");
+  // Build true next-24-hours: from current hour today + fill from tomorrow
+  const remaining = todayHours.slice(nowH);           // rest of today
+  const needed    = 24 - remaining.length;             // how many from tomorrow
+  const next24    = [...remaining, ...tomorrowHours.slice(0, needed)];
 
-    // Format time as 12h
-    const timeStr = h === nowH ? "Now" :
-      new Date(`2000-01-01T${String(h).padStart(2,"0")}:00`).toLocaleTimeString("en-US", { hour: "numeric", hour12: true });
+  next24.forEach((hour, idx) => {
+    const h      = parseInt(hour.time.split(" ")[1]);
+    const isNow  = idx === 0;
+    const card   = document.createElement("div");
+    card.className = "hour-card" + (isNow ? " now" : "");
+
+    // 12-hour time label
+    const timeStr = isNow ? "Now" :
+      new Date(`2000-01-01T${String(h).padStart(2,"0")}:00`)
+        .toLocaleTimeString("en-US", { hour: "numeric", hour12: true });
 
     const rainPct = hour.chance_of_rain;
-    const showRain = rainPct > 0;
 
     card.innerHTML = `
       <span class="hour-time">${timeStr}</span>
@@ -847,9 +916,9 @@ function renderHourly(hours) {
       <span class="hour-temp">${temp(hour.temp_c)}</span>
       <div class="hour-rain-bar-wrap" title="${rainPct}% rain">
         <div class="hour-rain-bar">
-          <div class="hour-rain-bar-fill" style="height:${rainPct}%"></div>
+          <div class="hour-rain-bar-fill" style="width:${rainPct}%"></div>
         </div>
-        ${showRain ? `<span class="hour-rain-pct">${rainPct}%</span>` : ""}
+        ${rainPct > 0 ? `<span class="hour-rain-pct">${rainPct}%</span>` : ""}
       </div>
       <span class="hour-wind">${Math.round(hour.wind_kph)} <small>km/h</small></span>
     `;
