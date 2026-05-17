@@ -66,6 +66,7 @@ app.use(cors({
 app.options("*", cors());
 
 app.use(express.json({ limit: "10kb" }));
+app.use(express.static("public"));
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 

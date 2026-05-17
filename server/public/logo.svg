@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="100" height="100" rx="22" fill="#0d1424"/>
+  <!-- Atmospheric arcs -->
+  <circle cx="50" cy="50" r="38" fill="none" stroke="#38bdf8" stroke-width="0.8" stroke-opacity="0.2"/>
+  <circle cx="50" cy="50" r="29" fill="none" stroke="#818cf8" stroke-width="0.8" stroke-opacity="0.28"/>
+  <!-- A - left leg -->
+  <line x1="28" y1="74" x2="50" y2="26" stroke="url(#g)" stroke-width="6.5" stroke-linecap="round"/>
+  <!-- A - right leg -->
+  <line x1="72" y1="74" x2="50" y2="26" stroke="url(#g)" stroke-width="6.5" stroke-linecap="round"/>
+  <!-- A - crossbar -->
+  <line x1="34" y1="58" x2="66" y2="58" stroke="url(#g)" stroke-width="5" stroke-linecap="round"/>
+  <!-- Apex dot -->
+  <circle cx="50" cy="22" r="3.5" fill="white" fill-opacity="0.9"/>
+  <!-- Border -->
+  <rect width="100" height="100" rx="22" fill="none" stroke="url(#g)" stroke-width="1" stroke-opacity="0.3"/>
+</svg>

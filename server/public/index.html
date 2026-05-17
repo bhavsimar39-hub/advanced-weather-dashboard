@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Atmos — Weather Intelligence</title>
 
+  <!-- ✅ FAVICON — shows logo in browser tab -->
+  <link rel="icon" type="image/svg+xml" href="./logo.svg" />
+  <link rel="apple-touch-icon" href="./logo.svg" />
+  <meta name="theme-color" content="#0d1424" />
+
   <!-- FONTS -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -42,8 +47,9 @@
       </button>
 
       <div class="modal-left">
+        <!-- ✅ SVG logo in modal branding -->
         <div class="modal-brand">
-          <i class="fa-solid fa-cloud-sun-rain"></i>
+          <img src="./logo.svg" alt="Atmos" class="brand-logo" />
           <span>Atmos</span>
         </div>
         <div class="modal-tagline">
@@ -109,9 +115,9 @@
 
     <!-- TOP NAVBAR -->
     <header class="topnav">
-      <!-- Left: Logo -->
+      <!-- ✅ SVG logo in top navbar -->
       <div class="topnav-logo">
-        <i class="fa-solid fa-cloud-sun-rain"></i>
+        <img src="./logo.svg" alt="Atmos" class="brand-logo" />
         <span>Atmos</span>
       </div>
 
@@ -403,7 +409,6 @@
 
   <script type="module" src="./js/app.js"></script>
   <script>
-    // Mobile nav — mirrors desktop sidebar behaviour
     const sectionMap = {
       main:      ".hero-section",
       forecast:  ".forecast-panel",
@@ -422,7 +427,6 @@
       });
     });
 
-    // Hamburger: toggle mobile dropdown nav
     const hamburger = document.getElementById("topnav-hamburger");
     const topnavLinks = document.querySelector(".topnav-links");
     if (hamburger && topnavLinks) {
@@ -434,7 +438,6 @@
             : "fa-solid fa-bars";
       });
     }
-    // Mobile account button opens auth modal
     const mobileAuthBtn = document.getElementById("mobile-auth-btn");
     if (mobileAuthBtn) {
       mobileAuthBtn.addEventListener("click", () => {
@@ -442,7 +445,6 @@
         const chip = document.getElementById("user-chip");
         if (btn && btn.style.display !== "none") btn.click();
         else if (chip && chip.style.display !== "none") {
-          // Already logged in — scroll to favorites
           const el = document.querySelector(".fav-panel");
           if (el) el.scrollIntoView({ behavior: "smooth" });
         }
