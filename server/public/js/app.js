@@ -83,7 +83,34 @@ async function detectAndLoadLocation() {
       const { latitude, longitude } = position.coords;
       try {
         loader.classList.remove("hide");
-        const data = await getWeatherByCoords(latitude, longitude);
+
+        // ── Reverse geocode using OpenStreetMap Nominatim ──────
+        // This gives us the proper city/district name instead of
+        // a small suburb that WeatherAPI's coord lookup might return.
+        let cityQuery = `${latitude},${longitude}`; // fallback: raw coords
+        try {
+          const geoRes = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&zoom=10&addressdetails=1`,
+            { headers: { "Accept-Language": "en" } }
+          );
+          if (geoRes.ok) {
+            const geoData = await geoRes.json();
+            const addr = geoData.address || {};
+            // Pick the best available place name in priority order
+            cityQuery =
+              addr.city        ||
+              addr.town        ||
+              addr.municipality||
+              addr.county      ||
+              addr.state_district ||
+              addr.state       ||
+              cityQuery;
+          }
+        } catch (_) {
+          // Nominatim failed — fall back to raw coords, no problem
+        }
+
+        const data = await getWeather(cityQuery);
         currentCity = data.location.name;
         updateUI(data);
         createChart(data);
