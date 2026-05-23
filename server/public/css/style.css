@@ -1595,7 +1595,7 @@ body[data-weather="clear"] .hero-section {
   .forecast-precip { font-size: 0.62rem; min-width: 26px; }
 
   /* Hourly */
-  .hourly-container { gap: 6px; }
+  .hourly-container { gap: 10px; }
   .hour-card { min-width: 58px; padding: 10px 6px; gap: 4px; border-radius: 12px; }
   .hour-time { font-size: 0.65rem; }
   .hour-temp { font-size: 0.85rem; }
