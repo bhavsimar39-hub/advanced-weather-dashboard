@@ -802,10 +802,6 @@ export function updateUI(data) {
   // Last updated from API local time
   setLastUpdated(location.localtime);
 
-  setLastUpdated(location.localtime);
-
-  setLastUpdated(location.localtime);
-
   renderForecast(forecast.forecastday);
   renderHourly(forecast.forecastday[0].hour, forecast.forecastday[1]?.hour || []);
   renderLifestyleTips(data);
@@ -1233,25 +1229,6 @@ export function startClock() {
   }
   tick();
   setInterval(tick, 1000);
-}
-
-/* ============================================================
-   LAST UPDATED TIMESTAMP
-   ============================================================ */
-export function setLastUpdated(localtime) {
-  let el = $("last-updated");
-  if (!el) {
-    // Create element if not in HTML
-    el = document.createElement("span");
-    el.id = "last-updated";
-    el.style.cssText = "font-size:0.7rem;color:var(--text-3);opacity:0.7;display:block;text-align:right;margin-top:4px;";
-    const cityEl = $("city-name");
-    if (cityEl && cityEl.parentNode) cityEl.parentNode.appendChild(el);
-  }
-  // localtime from API: "2024-05-23 14:35"
-  const d = localtime ? new Date(localtime.replace(" ", "T")) : new Date();
-  const timeStr = d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
-  el.textContent = `Updated ${timeStr}`;
 }
 
 /* ============================================================
