@@ -705,14 +705,29 @@ export function updateUI(data) {
   $("humidity").textContent     = `${current.humidity}%`;
   $("humidity-bar").style.width = `${current.humidity}%`;
 
-  // Wind: speed + direction text + gust
-  const windDir = current.wind_dir || "";
+  // Wind: speed + full compass name + gust
+  const COMPASS = {
+    N:"North",NNE:"N-Northeast",NE:"Northeast",ENE:"E-Northeast",
+    E:"East",ESE:"E-Southeast",SE:"Southeast",SSE:"S-Southeast",
+    S:"South",SSW:"S-Southwest",SW:"Southwest",WSW:"W-Southwest",
+    W:"West",WNW:"W-Northwest",NW:"Northwest",NNW:"N-Northwest"
+  };
+  const windDir = COMPASS[current.wind_dir] || current.wind_dir || "";
   const gustKph = current.gust_kph ? ` · Gust ${Math.round(current.gust_kph)} km/h` : "";
   $("wind-speed").textContent = `${current.wind_kph} km/h ${windDir}${gustKph}`;
   const needle = $("wind-needle");
   if (needle) needle.style.transform = `translate(-50%, -100%) rotate(${current.wind_degree}deg)`;
 
-  $("feels-like").textContent  = temp(current.feelslike_c);
+  // Feels like with reason
+  const feelsC    = current.feelslike_c;
+  const actualC   = current.temp_c;
+  const diff      = feelsC - actualC;
+  let feelsReason = "";
+  if (current.humidity > 70 && actualC > 25)  feelsReason = " · humid";
+  else if (current.wind_kph > 20 && actualC < 20) feelsReason = " · wind chill";
+  else if (diff > 2)  feelsReason = " · feels hotter";
+  else if (diff < -2) feelsReason = " · feels cooler";
+  $("feels-like").textContent = temp(feelsC) + feelsReason;
   $("pressure").textContent    = `${current.pressure_mb} hPa`;
   $("visibility").textContent  = `${current.vis_km} km`;
 
@@ -755,7 +770,16 @@ export function updateUI(data) {
   // ── Dew point & cloud cover (extra stat cards) ────────────
   const dewEl   = $("dew-point");
   const cloudEl = $("cloud-cover");
-  if (dewEl)   dewEl.textContent   = temp(current.dewpoint_c ?? (current.dew_point_c));
+  // Dew point — calculate if not provided
+  const dewC = current.dewpoint_c ?? current.dew_point_c ?? (() => {
+    // Magnus formula approximation
+    const a = 17.27, b = 237.7;
+    const rh = current.humidity / 100;
+    const t  = current.temp_c;
+    const alpha = ((a * t) / (b + t)) + Math.log(rh);
+    return (b * alpha) / (a - alpha);
+  })();
+  if (dewEl) dewEl.textContent = temp(dewC);
   if (cloudEl) cloudEl.textContent = `${current.cloud}%`;
 
   // ── Precipitation summary (Apple Weather style) ───────────
@@ -774,6 +798,13 @@ export function updateUI(data) {
 
   // ── Weather alerts banner ─────────────────────────────────
   renderAlerts(alerts?.alert || []);
+
+  // Last updated from API local time
+  setLastUpdated(location.localtime);
+
+  setLastUpdated(location.localtime);
+
+  setLastUpdated(location.localtime);
 
   renderForecast(forecast.forecastday);
   renderHourly(forecast.forecastday[0].hour, forecast.forecastday[1]?.hour || []);
@@ -910,15 +941,17 @@ function renderHourly(todayHours, tomorrowHours = []) {
 
     const rainPct = hour.chance_of_rain;
 
+    const precipMm = hour.precip_mm || 0;
+    const precipStr = precipMm >= 0.1 ? `${precipMm.toFixed(1)}mm` : "";
     card.innerHTML = `
       <span class="hour-time">${timeStr}</span>
-      <img src="https:${hour.condition.icon}" alt="${hour.condition.text}" />
+      <img src="https:${hour.condition.icon}" alt="${hour.condition.text}" title="${hour.condition.text}" />
       <span class="hour-temp">${temp(hour.temp_c)}</span>
-      <div class="hour-rain-bar-wrap" title="${rainPct}% rain">
+      <div class="hour-rain-bar-wrap" title="${rainPct}% chance · ${precipMm}mm">
         <div class="hour-rain-bar">
           <div class="hour-rain-bar-fill" style="width:${rainPct}%"></div>
         </div>
-        ${rainPct > 0 ? `<span class="hour-rain-pct">${rainPct}%</span>` : ""}
+        ${rainPct > 0 ? `<span class="hour-rain-pct">${precipStr || rainPct + "%"}</span>` : ""}
       </div>
       <span class="hour-wind">${Math.round(hour.wind_kph)} <small>km/h</small></span>
     `;
@@ -1200,4 +1233,40 @@ export function startClock() {
   }
   tick();
   setInterval(tick, 1000);
+}
+
+/* ============================================================
+   LAST UPDATED TIMESTAMP
+   ============================================================ */
+export function setLastUpdated(localtime) {
+  let el = $("last-updated");
+  if (!el) {
+    // Create element if not in HTML
+    el = document.createElement("span");
+    el.id = "last-updated";
+    el.style.cssText = "font-size:0.7rem;color:var(--text-3);opacity:0.7;display:block;text-align:right;margin-top:4px;";
+    const cityEl = $("city-name");
+    if (cityEl && cityEl.parentNode) cityEl.parentNode.appendChild(el);
+  }
+  // localtime from API: "2024-05-23 14:35"
+  const d = localtime ? new Date(localtime.replace(" ", "T")) : new Date();
+  const timeStr = d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+  el.textContent = `Updated ${timeStr}`;
+}
+
+/* ============================================================
+   LAST UPDATED TIMESTAMP
+   ============================================================ */
+export function setLastUpdated(localtime) {
+  let el = document.getElementById("last-updated");
+  if (!el) {
+    el = document.createElement("span");
+    el.id = "last-updated";
+    el.style.cssText = "font-size:0.7rem;color:var(--text-3);opacity:0.7;display:block;text-align:right;margin-top:4px;";
+    const cityEl = document.getElementById("city-name");
+    if (cityEl && cityEl.parentNode) cityEl.parentNode.appendChild(el);
+  }
+  const d = localtime ? new Date(localtime.replace(" ", "T")) : new Date();
+  const timeStr = d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+  el.textContent = `Updated ${timeStr}`;
 }

@@ -368,3 +368,8 @@ document.querySelectorAll(".nav-item").forEach((item) => {
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 });
+
+// ─── AUTO REFRESH every 10 minutes ──────────────────────────
+setInterval(() => {
+  if (currentCity) searchWeather(currentCity);
+}, 10 * 60 * 1000);

@@ -10,7 +10,7 @@ export const getWeather = async (req, res, next) => {
     const apiKey = process.env.WEATHER_API_KEY;
 
     const response = await axios.get(WEATHER_BASE, {
-      params: { key: apiKey, q: city, days: 8, aqi: "yes", alerts: "yes" },
+      params: { key: apiKey, q: city, days: 8, aqi: "yes", alerts: "yes", tp: 1 }, // tp:1 = hourly granularity
       timeout: 8000,
     });
 
