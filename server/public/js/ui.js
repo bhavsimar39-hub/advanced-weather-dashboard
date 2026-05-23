@@ -702,34 +702,53 @@ export function updateUI(data) {
   $("temp-min").textContent = temp(today.mintemp_c);
 
   // ── Stats grid ───────────────────────────────────────────
-  $("humidity").textContent     = `${current.humidity}%`;
+  const humidityLabel = current.humidity < 30 ? "Dry" :
+    current.humidity < 50 ? "Comfortable" :
+    current.humidity < 70 ? "Humid" : "Very Humid";
+  $("humidity").textContent     = `${current.humidity}% · ${humidityLabel}`;
   $("humidity-bar").style.width = `${current.humidity}%`;
 
-  // Wind: speed + full compass name + gust
+  // Wind: Beaufort scale + direction + gust
   const COMPASS = {
     N:"North",NNE:"N-Northeast",NE:"Northeast",ENE:"E-Northeast",
     E:"East",ESE:"E-Southeast",SE:"Southeast",SSE:"S-Southeast",
     S:"South",SSW:"S-Southwest",SW:"Southwest",WSW:"W-Southwest",
     W:"West",WNW:"W-Northwest",NW:"Northwest",NNW:"N-Northwest"
   };
+  const windKph = current.wind_kph;
+  const beaufort = windKph < 1 ? "Calm" : windKph < 6 ? "Light Air" :
+    windKph < 12 ? "Light Breeze" : windKph < 20 ? "Gentle Breeze" :
+    windKph < 29 ? "Moderate Breeze" : windKph < 39 ? "Fresh Breeze" :
+    windKph < 50 ? "Strong Breeze" : windKph < 62 ? "Near Gale" :
+    windKph < 75 ? "Gale" : windKph < 89 ? "Strong Gale" :
+    windKph < 103 ? "Storm" : "Violent Storm";
   const windDir = COMPASS[current.wind_dir] || current.wind_dir || "";
   const gustKph = current.gust_kph ? ` · Gust ${Math.round(current.gust_kph)} km/h` : "";
-  $("wind-speed").textContent = `${current.wind_kph} km/h ${windDir}${gustKph}`;
+  $("wind-speed").textContent = `${windKph} km/h · ${beaufort}
+${windDir}${gustKph}`;
   const needle = $("wind-needle");
   if (needle) needle.style.transform = `translate(-50%, -100%) rotate(${current.wind_degree}deg)`;
 
-  // Feels like with reason
-  const feelsC    = current.feelslike_c;
-  const actualC   = current.temp_c;
-  const diff      = feelsC - actualC;
+  const feelsC  = current.feelslike_c;
+  const actualC = current.temp_c;
+  const diff    = feelsC - actualC;
   let feelsReason = "";
-  if (current.humidity > 70 && actualC > 25)  feelsReason = " · humid";
-  else if (current.wind_kph > 20 && actualC < 20) feelsReason = " · wind chill";
-  else if (diff > 2)  feelsReason = " · feels hotter";
-  else if (diff < -2) feelsReason = " · feels cooler";
-  $("feels-like").textContent = temp(feelsC) + feelsReason;
-  $("pressure").textContent    = `${current.pressure_mb} hPa`;
-  $("visibility").textContent  = `${current.vis_km} km`;
+  if (current.humidity > 70 && actualC > 25) feelsReason = "Humidity making it hotter";
+  else if (current.wind_kph > 20 && actualC < 20) feelsReason = "Wind making it colder";
+  else if (diff > 3)  feelsReason = "Feels hotter than actual";
+  else if (diff < -3) feelsReason = "Feels cooler than actual";
+  else feelsReason = "Similar to actual temp";
+  $("feels-like").textContent = `${temp(feelsC)} · ${feelsReason}`;
+  // Pressure trend based on value ranges
+  const pressureMb = current.pressure_mb;
+  const pressureTrend = pressureMb > 1022 ? "↑ High · Rising" :
+    pressureMb > 1013 ? "→ Normal · Steady" :
+    pressureMb > 1000 ? "↓ Low · Falling" : "↓ Very Low";
+  $("pressure").textContent = `${pressureMb} hPa · ${pressureTrend}`;
+  const visKm = current.vis_km;
+  const visLabel = visKm >= 10 ? "Clear" : visKm >= 5 ? "Good" :
+    visKm >= 2 ? "Moderate" : visKm >= 1 ? "Poor" : "Very Poor";
+  $("visibility").textContent = `${visKm} km · ${visLabel}`;
 
   // ── AQI with descriptive label ───────────────────────────
   if (current.air_quality) {
@@ -751,11 +770,22 @@ export function updateUI(data) {
   const uvFill = $("uv-bar-fill");
   if (uvFill && uv != null) uvFill.style.width = `${Math.min((uv / 11) * 100, 100)}%`;
 
-  // ── Sun arc + moon phase ─────────────────────────────────
+  // ── Sun arc + daylight duration + moon phase ────────────
   const astro = forecast.forecastday[0].astro;
   $("sunrise").textContent = astro.sunrise;
   $("sunset").textContent  = astro.sunset;
   updateSunArc(astro.sunrise, astro.sunset);
+
+  // Daylight duration
+  const daylightEl = $("daylight-duration");
+  if (daylightEl) {
+    const rise = parseTime(astro.sunrise);
+    const set  = parseTime(astro.sunset);
+    const totalMin = set - rise;
+    const dH = Math.floor(totalMin / 60);
+    const dM = totalMin % 60;
+    daylightEl.textContent = `${dH}h ${dM}m of daylight`;
+  }
 
   // Moon phase display
   const moonEl = $("moon-phase");
@@ -770,36 +800,50 @@ export function updateUI(data) {
   // ── Dew point & cloud cover (extra stat cards) ────────────
   const dewEl   = $("dew-point");
   const cloudEl = $("cloud-cover");
-  // Dew point — calculate if not provided
   const dewC = current.dewpoint_c ?? current.dew_point_c ?? (() => {
-    // Magnus formula approximation
-    const a = 17.27, b = 237.7;
-    const rh = current.humidity / 100;
-    const t  = current.temp_c;
+    const a = 17.27, b = 237.7, rh = current.humidity / 100, t = current.temp_c;
     const alpha = ((a * t) / (b + t)) + Math.log(rh);
     return (b * alpha) / (a - alpha);
   })();
   if (dewEl) dewEl.textContent = temp(dewC);
   if (cloudEl) cloudEl.textContent = `${current.cloud}%`;
 
-  // ── Precipitation summary (Apple Weather style) ───────────
+  // ── Precipitation summary — Apple Weather style ──────────
   const precipEl = $("precip-summary");
   if (precipEl) {
-    const rainMm   = today.totalprecip_mm;
+    const rainMm     = today.totalprecip_mm;
     const rainChance = today.daily_chance_of_rain;
-    if (rainMm > 0) {
-      precipEl.textContent = `${rainMm} mm expected · ${rainChance}% chance of rain`;
-    } else if (rainChance > 20) {
-      precipEl.textContent = `${rainChance}% chance of rain`;
+    const hours      = forecast.forecastday[0].hour;
+    const nowH       = new Date().getHours();
+
+    // Look at next 3 hours to predict "starting/stopping soon"
+    const nextHours  = hours.slice(nowH, nowH + 3);
+    const currentlyRaining = (current.precip_mm || 0) > 0 ||
+      current.condition.text.toLowerCase().includes("rain") ||
+      current.condition.text.toLowerCase().includes("drizzle");
+
+    let summary = "";
+    if (currentlyRaining) {
+      const stopHour = nextHours.findIndex(h => (h.precip_mm || 0) === 0 && h.chance_of_rain < 30);
+      if (stopHour === 0) summary = "Rain stopping soon";
+      else if (stopHour === 1) summary = "Rain stopping in ~1 hour";
+      else if (stopHour === 2) summary = "Rain stopping in ~2 hours";
+      else summary = `${rainMm > 0 ? rainMm + " mm · " : ""}Rain continuing`;
     } else {
-      precipEl.textContent = "No precipitation expected";
+      const startHour = nextHours.findIndex(h => h.chance_of_rain > 50 || (h.precip_mm || 0) > 0);
+      if (startHour === 0) summary = "Rain starting soon";
+      else if (startHour === 1) summary = "Rain expected in ~1 hour";
+      else if (startHour === 2) summary = "Rain possible in ~2 hours";
+      else if (rainMm > 0) summary = `${rainMm} mm expected · ${rainChance}% chance`;
+      else if (rainChance > 20) summary = `${rainChance}% chance of rain today`;
+      else summary = "No precipitation expected";
     }
+    precipEl.textContent = summary;
   }
 
   // ── Weather alerts banner ─────────────────────────────────
   renderAlerts(alerts?.alert || []);
 
-  // Last updated from API local time
   setLastUpdated(location.localtime);
 
   renderForecast(forecast.forecastday);
@@ -937,17 +981,15 @@ function renderHourly(todayHours, tomorrowHours = []) {
 
     const rainPct = hour.chance_of_rain;
 
-    const precipMm = hour.precip_mm || 0;
-    const precipStr = precipMm >= 0.1 ? `${precipMm.toFixed(1)}mm` : "";
     card.innerHTML = `
       <span class="hour-time">${timeStr}</span>
-      <img src="https:${hour.condition.icon}" alt="${hour.condition.text}" title="${hour.condition.text}" />
+      <img src="https:${hour.condition.icon}" alt="${hour.condition.text}" />
       <span class="hour-temp">${temp(hour.temp_c)}</span>
-      <div class="hour-rain-bar-wrap" title="${rainPct}% chance · ${precipMm}mm">
+      <div class="hour-rain-bar-wrap" title="${rainPct}% rain">
         <div class="hour-rain-bar">
           <div class="hour-rain-bar-fill" style="width:${rainPct}%"></div>
         </div>
-        ${rainPct > 0 ? `<span class="hour-rain-pct">${precipStr || rainPct + "%"}</span>` : ""}
+        ${rainPct > 0 ? `<span class="hour-rain-pct">${rainPct}%</span>` : ""}
       </div>
       <span class="hour-wind">${Math.round(hour.wind_kph)} <small>km/h</small></span>
     `;
@@ -1230,20 +1272,15 @@ export function startClock() {
   tick();
   setInterval(tick, 1000);
 }
-
-/* ============================================================
-   LAST UPDATED TIMESTAMP
-   ============================================================ */
 export function setLastUpdated(localtime) {
   let el = document.getElementById("last-updated");
   if (!el) {
     el = document.createElement("span");
     el.id = "last-updated";
-    el.style.cssText = "font-size:0.7rem;color:var(--text-3);opacity:0.7;display:block;text-align:right;margin-top:4px;";
+    el.style.cssText = "font-size:0.7rem;color:var(--text-3);opacity:0.7;display:block;margin-top:2px;";
     const cityEl = document.getElementById("city-name");
     if (cityEl && cityEl.parentNode) cityEl.parentNode.appendChild(el);
   }
   const d = localtime ? new Date(localtime.replace(" ", "T")) : new Date();
-  const timeStr = d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
-  el.textContent = `Updated ${timeStr}`;
+  el.textContent = "Updated " + d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
 }
